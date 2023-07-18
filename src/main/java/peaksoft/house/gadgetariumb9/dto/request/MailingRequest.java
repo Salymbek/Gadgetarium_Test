@@ -18,6 +18,6 @@ public class MailingRequest {
   private String name;
   private String description;
   private String image;
-  private ZonedDateTime startDate;
-  private ZonedDateTime finishDate;
+  private String startDate;
+  private String finishDate;
 }

@@ -18,9 +18,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
@@ -57,29 +61,31 @@ public class MailingPart2 implements MailingService {
   public void sendHtmlEmail(MailingRequest mailingRequest) {
     List<String>emails = getUsers();
     try {
+      LocalDate startDate = LocalDate.parse(mailingRequest.getStartDate());
+      LocalDate finishDate = LocalDate.parse(mailingRequest.getFinishDate());
+      LocalDate currentDate = LocalDate.now();
+
+      if (!startDate.isAfter(currentDate)) {
+        throw new IllegalArgumentException("Дата должна быть в будущем");
+      }
+
+      if (!finishDate.isAfter(currentDate)) {
+        throw new IllegalArgumentException("Дата должна быть в будущем");
+      }
+
+      ZoneId zoneId = ZoneId.systemDefault();
+      ZonedDateTime startDateZ = ZonedDateTime.of(startDate.atStartOfDay(),zoneId);
+      ZonedDateTime finishDateZ = ZonedDateTime.of(finishDate.atStartOfDay(),zoneId);
 
       Mailing mailing = Mailing.builder()
           .title(mailingRequest.getName())
           .description(mailingRequest.getDescription())
-          .startDate(mailingRequest.getStartDate())
-          .finishDate(mailingRequest.getFinishDate())
+          .startDate(startDateZ)
+          .finishDate(finishDateZ)
           .image(mailingRequest.getImage())
           .build();
 
       mailingRepository.save(mailing);
-      //
-//      Configuration configuration = new Configuration(Configuration.VERSION_2_3_32);
-//      configuration.setDirectoryForTemplateLoading(new File("src/main/resources/templates")); // Укажите путь к папке с шаблоном HTML-файла
-//      Template template = configuration.getTemplate("emailtemplate.html");
-//
-//      Map<String, Object> data = new HashMap<>();
-//      data.put("imageUrl", mailingRequest.getImage());
-//
-//      FileWriter fileWriter = new FileWriter("templates/emailtemplate.html"); // Укажите путь для сохранения HTML-файла
-//      template.process(data, fileWriter);
-//
-//      fileWriter.close();
-      //
       Context context = new Context();
       context.setVariable("description",mailingRequest.getDescription());
       context.setVariable("image",mailingRequest.getImage());
