@@ -22,6 +22,6 @@ public class ProductRequest {
   private int guarantee;
 
   private ZonedDateTime dateOfIssue;
-  //private List<SubProductRequest>subProductRequests;
+  private List<SubProductRequest>subProductRequests;
 
 }
