@@ -1,35 +1,15 @@
 package peaksoft.house.gadgetariumb9.service.impl;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import jakarta.activation.DataHandler;
-import jakarta.activation.FileDataSource;
-import jakarta.mail.BodyPart;
-import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ResourceLoader;
+import lombok.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -48,7 +28,6 @@ import peaksoft.house.gadgetariumb9.service.MailingService;
 public class MailingPart2 implements MailingService {
 
   public static final String EMAIL_TEMPLATE = "emailtemplate";
-  public static final String TEXT_HTML_ENCONDING = "text/html";
   private final JavaMailSender emailSender;
   private final UserRepository userRepository;
   private final MailingRepository mailingRepository;
@@ -104,8 +83,6 @@ public class MailingPart2 implements MailingService {
         }
       }
       helper.setText(text, true);
-
-
 
       emailSender.send(message);
 
