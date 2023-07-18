@@ -6,6 +6,6 @@ import peaksoft.house.gadgetariumb9.dto.response.TokenResponse;
 
 @Service
 public interface UserService {
-  TokenResponse authenticate(UserRequest userRequest);
+//  TokenResponse authenticate(UserRequest userRequest);
 
 }

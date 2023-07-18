@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import java.util.Collection;
 import lombok.*;
 import java.util.List;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+//import org.springframework.security.core.GrantedAuthority;
+//import org.springframework.security.core.authority.SimpleGrantedAuthority;
+//import org.springframework.security.core.userdetails.UserDetails;
 import peaksoft.house.gadgetariumb9.enums.Role;
 
 import static jakarta.persistence.CascadeType.*;
@@ -19,7 +19,7 @@ import static jakarta.persistence.CascadeType.PERSIST;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User {//implements UserDetails {
 
     @Id
     @GeneratedValue(generator = "user_gen", strategy = GenerationType.SEQUENCE)
@@ -66,40 +66,40 @@ public class User implements UserDetails {
         cascade = {MERGE, DETACH, REFRESH, PERSIST, REMOVE})
     private List<Basket> baskets;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+//    @Override
+//    public Collection<? extends GrantedAuthority> getAuthorities() {
+//        return List.of(new SimpleGrantedAuthority(role.name()));
+//    }
+//
+//    @Override
+//    public String getUsername() {
+//        return this.email;
+//    }
+//
+//
+//    @Override
+//    public String getPassword() {
+//        return this.password;
+//    }
+//
+//
+//    @Override
+//    public boolean isAccountNonExpired() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isAccountNonLocked() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isCredentialsNonExpired() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isEnabled() {
+//        return true;
+//    }
 }

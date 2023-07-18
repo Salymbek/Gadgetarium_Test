@@ -15,8 +15,9 @@ import lombok.Setter;
 @Builder
 @Data
 public class MailingRequest {
-  private String title;
+  private String name;
   private String description;
   private String image;
+  private ZonedDateTime startDate;
   private ZonedDateTime finishDate;
 }
