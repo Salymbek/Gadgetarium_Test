@@ -12,7 +12,7 @@ import static jakarta.persistence.CascadeType.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Review {
+public class  Review {
 
     @Id
     @GeneratedValue(generator = "review_gen", strategy = GenerationType.SEQUENCE)

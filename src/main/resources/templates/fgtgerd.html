@@ -1,75 +1,696 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
-<!--<head>-->
-<!--  <meta charset="UTF-8">-->
-<!--  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">-->
-<!--  <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--  <title>Email Template</title>-->
-<!--  <style>-->
-<!--    /* Inline styles for email formatting */-->
-<!--    body {-->
-<!--      font-family: Arial, sans-serif;-->
-<!--      margin: 0;-->
-<!--      padding: 0;-->
-<!--      width: 37.5rem;-->
-<!--      display: flex;-->
-<!--      flex-direction: column;-->
-<!--      box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);-->
-<!--    }-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="header">
+  <div class="top">
+    <div class="logo">
+      <span>G</span>
+      <h3>adgetarium</h3>
+    </div>
+    <ul>
+      <li><a href="">Главная</a></li>
+      <li><a href="">О магазине</a></li>
+      <li><a href="">Доставка</a></li>
+      <li><a href="">FAQ</a></li>
+      <li><a href="">Контакты</a></li>
+    </ul>
+    <p>+996 (400) 00-00-00</p>
+  </div>
+  <span class="line"></span>
+  <div class="bottom">
+    <p><img src="Framewww.svg" alt=""></p>
+    <div class="line2"></div>
+    <div class="input"><h6>с</h6></div>
+    <ul>
+      <li><a href=""><img src="header-fb.svg" alt=""></a></li>
+      <li><a href=""><img src="header-inst.svg" alt=""></a></li>
+      <li><a href=""><img src="header-watts.svg" alt=""></a></li>
+    </ul>
+    <ol>
+      <li><a href=""><img src=" " alt=""></a></li>
+      <li><a href=""><img src="header-icon1.svgh" alt=""></a></li>
+      <li><a href=""><img src="header-icon1.svg" alt=""></a></li>
+    </ol>
+  </div>
 
+</div>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
 
-<!--    header {-->
-<!--      width: 37.5rem;-->
-<!--      height: 8.125rem;-->
-<!--      display: flex;-->
-<!--      background: #1A1A25;-->
-<!--      justify-content: center;-->
-<!--    }-->
+  .header {
+    background: #1A1A25;
+    width: 1920px;
+    height: 173px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    margin: 0 auto;
+    color: white;
+  }
+  .header .top {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: distribute;
+    justify-content: space-around;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 75px;
+    gap: 290px;
+  }
+  .header .top .logo {
+    height: 39px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+  }
+  .header .top .logo h3 {
+    font-weight: 700;
+    font-size: 28px;
+    font-family: "Orbitron";
+  }
+  .header .top .logo span {
+    width: 34px;
+    height: 34px;
+    background: #CB11AB;
+    font-size: 28px;
+    display: -ms-grid;
+    display: grid;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 3px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    font-family: "Outfit", sans-serif;
+  }
+  .header .top ul {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: distribute;
+    justify-content: space-around;
+    height: 41px;
+    width: 503px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+  .header .top ul li {
+    list-style-type: none;
+  }
+  .header .top ul li a {
+    text-decoration: none;
+    color: white;
+    font-family: "Inter", sans-serif;
+  }
+  .header .top p {
+    font-size: 16px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    font-family: "Inter", sans-serif;
+  }
+  .header .top p::after {
+    content: url("header-icon1.svg");
+    margin-left: 30px;
+  }
+  .header .line {
+    width: 1920px;
+    background: rgba(133, 143, 164, 0.15);
+    color: rgba(133, 143, 164, 0.1490196078);
+    height: 1px;
+  }
+  .header .bottom {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    height: 96px;
+    width: 1495px;
+  }
+  .header .bottom p {
+    width: 136px;
+    height: 49px;
+    background: #CB11AB;
+    border-radius: 4px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+  }
+  .header .bottom p::after {
+    content: "Каталог";
+    margin-left: 6px;
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+  }
+  .header .bottom .line2 {
+    height: 40px;
+    background: rgba(133, 143, 164, 0.15);
+    color: rgba(133, 143, 164, 0.1490196078);
+    width: 1px;
+    margin-right: 50px;
+    margin-left: 50px;
+  }
+  .header .bottom .input {
+    width: 784px;
+    height: 40px;
+    border-radius: 4px;
+    border: teal;
+    background: white;
+    color: #1A1A25;
+  }
+  .header .bottom ul {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    gap: 22px;
+    list-style-type: none;
+    margin-right: 120px;
+    margin-left: 127px;
+  }
+  .header .bottom ol {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    gap: 22px;
+    list-style-type: none;
+  }
 
-<!--    main {-->
-<!--      padding: 2.5rem;-->
-<!--    }-->
+  * {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
 
-<!--    .container {-->
-<!--      max-width: 600px;-->
-<!--      margin: 0 auto;-->
-<!--      padding: 20px;-->
-<!--    }-->
+  .header {
+    background: #1A1A25;
+    width: 1920px;
+    height: 173px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    margin: 0 auto;
+    color: white;
+  }
+  .header .top {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: distribute;
+    justify-content: space-around;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 75px;
+    gap: 290px;
+  }
+  .header .top .logo {
+    height: 39px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+  }
+  .header .top .logo h3 {
+    font-weight: 700;
+    font-size: 28px;
+    font-family: "Orbitron";
+  }
+  .header .top .logo span {
+    width: 34px;
+    height: 34px;
+    background: #CB11AB;
+    font-size: 28px;
+    display: -ms-grid;
+    display: grid;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 3px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    font-family: "Outfit", sans-serif;
+  }
+  .header .top ul {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-pack: distribute;
+    justify-content: space-around;
+    height: 41px;
+    width: 503px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+  .header .top ul li {
+    list-style-type: none;
+  }
+  .header .top ul li a {
+    text-decoration: none;
+    color: white;
+    font-family: "Inter", sans-serif;
+  }
+  .header .top p {
+    font-size: 16px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    font-family: "Inter", sans-serif;
+  }
+  .header .top p::after {
+    content: url(../header-icon1.svg);
 
-<!--    .containerFooterText {-->
-<!--      margin: 20px 0 0 0;-->
-<!--      display: flex;-->
-<!--      flex-direction: column;-->
-<!--      gap: 10px;-->
-<!--    }-->
+    margin-left: 30px;
+  }
+  .header .line {
+    width: 1920px;
+    background: rgba(133, 143, 164, 0.15);
+    color: rgba(133, 143, 164, 0.1490196078);
+    height: 1px;
+  }
+  .header .bottom {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    height: 96px;
+    width: 1495px;
+  }
+  .header .bottom p {
+    width: 136px;
+    height: 49px;
+    background: #CB11AB;
+    border-radius: 4px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+  }
+  .header .bottom p::after {
+    content: "Каталог";
+    margin-left: 6px;
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+  }
+  .header .bottom .line2 {
+    height: 40px;
+    background: rgba(133, 143, 164, 0.15);
+    color: rgba(133, 143, 164, 0.1490196078);
+    width: 1px;
+    margin-right: 50px;
+    margin-left: 50px;
+  }
+  .header .bottom .input {
+    width: 784px;
+    height: 40px;
+    border-radius: 4px;
+    border: teal;
+    background: white;
+    color: #1A1A25;
+  }
+  .header .bottom ul {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    gap: 22px;
+    list-style-type: none;
+    margin-right: 120px;
+    margin-left: 127px;
+  }
+  .header .bottom ol {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
 
-<!--    h1 {-->
-<!--      color: #333333;-->
-<!--    }-->
+</style>
 
-<!--    p {-->
-<!--      color: #555555;-->
-<!--    }-->
-<!--  </style>-->
-<!--</head>-->
-<!--<body>-->
-<!--<header>-->
-<!--  <img src="LogoGadgetarium.svg" />-->
-<!--</header>-->
-<!--<main>-->
-<!--  <h1>Здравствуйте!</h1>-->
-<!--  <p>У нас есть специальное предложение для вас:</p>-->
-<!--  <div class="container">-->
-<!--    <div class="card-body">-->
-<!--      <h5 class="card-title" th:text="${description}">House type</h5>-->
-<!--      <h5 class="card-title" th:text="${finishDate}">Address</h5>-->
-<!--      <img class="card-text" th:src="${image}" alt="Product Image">-->
-<!--    </div>-->
-<!--  </div>-->
-<!--  <div class="containerFooterText">-->
-<!--    <span>Не упустите шанс приобрести новый гаджет по отличной цене!</span>-->
-<!--    <span>С уважением, Gadgetarium</span>-->
-<!--  </div>-->
-<!--</main>-->
-<!--</body>-->
-<!--</html>-->
+<footer>
+  <div class="top">
+    <div class="left">
+      <ul>
+        <li><a href="">Каталог</a></li>
+        <li><a href="">Смартфоны</a></li>
+        <li><a href="">Ноутбуки и планшеты</a></li>
+        <li><a href="">Смарт-часы и браслеты</a></li>
+        <li><a href="">Аксессуары</a></li>
+      </ul>
+      <ul>
+        <li><a href="">Будь с нами</a></li>
+        <li><a href="">Акции</a></li>
+        <li><a href="">Новинки</a></li>
+        <li><a href="">Популярные категории</a></li>
+      </ul>
+      <ul>
+        <li><a href="">Помощь и сервисы</a></li>
+        <li><a href="">О магазине</a></li>
+        <li><a href="">Доставка</a></li>
+        <li><a href="">FAQ</a></li>
+        <li><a href="">Контакты</a></li>
+      </ul>
+    </div>
+    <div class="right">
+      <p>Расскажем об акциях и скидках</p>
+      <div class="email__input">
+        <input type="text" placeholder="Email" class="footer__input">
+        <button class="footer__button"><a href="">Подписаться</a></button>
+      </div>
+      <span>Нажимая на кнопку «подписаться» Вы соглашаетесь <br> на обработку персональных данных</span>
+      <ul>
+        <li><a href="">+996 (400) 00 00 00</a></li>
+        <li><a href="">Gadgetarium.kg</a></li>
+        <li><a href="">г.Бишкек, ул. Гражданская 119</a></li>
+        <li><a href="">С 10:00 до 21:00 (без выходных)</a></li>
+      </ul>
+    </div>
+  </div>
+  <span class="footer__line"></span>
+  <div class="bottom">
+    <div class="footer__logo">
+      <span id="G">G</span>
+      <h3>adgetarium</h3>
+    </div>
+    <p>© 2022 Gadgetarium. Интернет магазин <br> Все права защищены.</p>
+  </div>
+</footer>
+<style>
+  footer {
+    width: 1920px;
+    background: #1A1A25;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    margin: 0 auto;
+  }
+  footer .top {
+    margin-top: 60px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    width: 1530px;
+    margin-bottom: 58px;
+  }
+  footer .top .left {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+  }
+  footer .top .left ul {
+    margin-right: 95px;
+  }
+  footer .top .left ul li {
+    list-style-type: none;
+    margin-bottom: 12px;
+  }
+  footer .top .left ul li:nth-child(1) {
+    margin-bottom: 30px;
+  }
+  footer .top .left ul li:nth-child(1) a {
+    color: #FFFFFF;
+  }
+  footer .top .left ul li a {
+    text-decoration: none;
+    font-family: "Inter", sans-serif;
+    color: #858FA4;
+  }
+  footer .top .left ul li a:hover {
+    color: #FFFFFF;
+  }
+  footer .top .right p {
+    font-family: "Inter", sans-serif;
+    color: #FFFFFF;
+    margin-bottom: 16px;
+  }
+  footer .top .right .email__input {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    margin-bottom: 18px;
+  }
+  footer .top .right .email__input .footer__input {
+    width: 246px;
+    height: 39px;
+    background: #FFFFFF;
+    border-radius: 4px 0 0 4px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    border: none;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    padding-left: 16px;
+  }
+  footer .top .right .email__input .footer__input::-webkit-input-placeholder {
+    color: #909CB5;
+    font-family: "Inter", sans-serif;
+  }
+  footer .top .right .email__input .footer__input::-moz-placeholder {
+    color: #909CB5;
+    font-family: "Inter", sans-serif;
+  }
+  footer .top .right .email__input .footer__input:-ms-input-placeholder {
+    color: #909CB5;
+    font-family: "Inter", sans-serif;
+  }
+  footer .top .right .email__input .footer__input::-ms-input-placeholder {
+    color: #909CB5;
+    font-family: "Inter", sans-serif;
+  }
+  footer .top .right .email__input .footer__input::placeholder {
+    color: #909CB5;
+    font-family: "Inter", sans-serif;
+  }
+  footer .top .right .email__input .footer__button {
+    background: #CB11AB;
+    border-radius: 0 4px 4px 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    width: 162px;
+    height: 39px;
+    border: none;
+  }
+  footer .top .right .email__input .footer__button a {
+    text-decoration: none;
+    color: #FFFFFF;
+    font-family: "Montserrat";
+    line-height: 19.5px;
+    font-weight: 500;
+  }
+  footer .top .right span {
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    color: #FFFFFF;
+    width: 367px;
+    text-align: left;
+    font-size: 14px;
+  }
+  footer .top .right ul {
+    margin-top: 42px;
+  }
+  footer .top .right ul li {
+    list-style-type: none;
+    margin-bottom: 17px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+  footer .top .right ul li:nth-child(1)::before {
+    content: url(../footer-phone.svg);
+    margin-right: 14px;
+  }
+  footer .top .right ul li:nth-child(2)::before {
+    content: url(../footer-email.svg);
+    margin-right: 14px;
+  }
+  footer .top .right ul li:nth-child(3)::before {
+    content: url(../footer-geo.svg);
+    margin-right: 14px;
+  }
+  footer .top .right ul li:nth-child(4)::before {
+    content: url(../footer-clock.svg);
+    margin-right: 14px;
+  }
+  footer .top .right ul li a {
+    color: #858FA4;
+    font-family: "Inter", sans-serif;
+    text-decoration: none;
+  }
+  footer .top .right ul li a:hover {
+    color: #FFFFFF;
+  }
+  footer .footer__line {
+    color: rgba(133, 143, 164, 0.1490196078);
+    background: rgba(133, 143, 164, 0.15);
+    width: 1530px;
+    height: 0.99px;
+  }
+  footer .bottom {
+    margin-top: 31px;
+    margin-bottom: 40px;
+  }
+  footer .bottom .footer__logo {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    height: 39px;
+    color: #FFFFFF;
+    margin-bottom: 18px;
+  }
+  footer .bottom .footer__logo h3 {
+    font-weight: 700;
+    font-size: 28px;
+    font-family: "Orbitron";
+  }
+  footer .bottom .footer__logo #G {
+    height: 34px;
+    background: #CB11AB;
+    font-size: 28px;
+    display: -ms-grid;
+    display: grid;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 3px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    font-family: "Outfit", sans-serif;
+    width: 34px;
+  }
+  footer .bottom p {
+    color: #858FA4;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 19.6px;
+    text-align: center;
+  }
+</style>
+</body>
+</html>
