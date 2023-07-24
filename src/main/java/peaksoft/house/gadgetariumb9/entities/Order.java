@@ -1,6 +1,8 @@
 package peaksoft.house.gadgetariumb9.entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
+import javax.security.auth.callback.LanguageCallback;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -40,7 +42,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private TypePaymant typePayment;
 
-    private ZonedDateTime dateOfOrder;
+    private LocalDate dateOfOrder;
 
     @Enumerated(EnumType.STRING)
     private Status status;

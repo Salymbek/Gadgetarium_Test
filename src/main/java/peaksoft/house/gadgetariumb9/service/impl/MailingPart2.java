@@ -9,7 +9,6 @@
 //import java.util.List;
 //import java.util.stream.Collectors;
 //import lombok.RequiredArgsConstructor;
-//import lombok.Value;
 //import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.mail.javamail.MimeMessageHelper;
 //import org.springframework.scheduling.annotation.Async;
@@ -48,7 +47,7 @@
 //        throw new IllegalArgumentException("Дата должна быть в будущем");
 //      }
 //
-//      if (!finishD ate.isAfter(currentDate)) {
+//      if (!finishDate.isAfter(currentDate)) {
 //        throw new IllegalArgumentException("Дата должна быть в будущем");
 //      }
 //
