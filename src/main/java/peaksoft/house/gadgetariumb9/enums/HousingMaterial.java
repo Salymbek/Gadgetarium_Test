@@ -1,11 +1,14 @@
 package peaksoft.house.gadgetariumb9.enums;
 
 public enum HousingMaterial {
-    ACRYLIC,
-    ALUMINIUM,
-    CERAMIC,
-    PLASTIC,
-    METAL,
-    STAINLESS_STEEL,
-    GLASS
+    ACRYLIC("Акриловый"),
+    ALUMINIUM("Алюминий"),
+    CERAMIC("Керамика"),
+    PLASTIC("Пластик"),
+    METAL("Метал"),
+    STAINLESS_STEEL("Нержавеющая сталь"),
+    GLASS("Стекло");
+
+    HousingMaterial(String value) {
+    }
 }

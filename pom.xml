@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.0.8</version>
+    <version>3.1.1</version>
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
   <groupId>peaksoft</groupId>
@@ -18,129 +18,104 @@
     <java.version>17</java.version>
   </properties>
   <dependencies>
-  <!--    <dependency>&ndash;&gt;-->
-  <!--                <groupId>org.springframework.boot</groupId>-->
-  <!--                <artifactId>spring-boot-starter-security</artifactId>-->
-  <!--            </dependency>-->
-  <!--    <dependencies>-->
-  <!--        -->
-
-
-
-<!--          <dependency>-->
-<!--              <groupId>org.springframework.boot</groupId>-->
-<!--              <artifactId>spring-boot-starter-thymeleaf</artifactId>-->
-<!--          </dependency>-->
-<!--          <dependency>-->
-<!--              <groupId>org.springframework.boot</groupId>-->
-<!--              <artifactId>spring-boot-starter-validation</artifactId>-->
-<!--          </dependency>-->
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-web</artifactId>
-          </dependency>
-  <!--        <dependency>-->
-  <!--            <groupId>org.thymeleaf.extras</groupId>-->
-  <!--            <artifactId>thymeleaf-extras-springsecurity6</artifactId>-->
-  <!--        </dependency>-->
-
-
-  <dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <optional>true</optional>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-test</artifactId>
-    <scope>test</scope>
-  </dependency>
-  <dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-api</artifactId>
-    <version>0.11.5</version>
-  </dependency>
-  <dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-impl</artifactId>
-    <version>0.11.5</version>
-  </dependency>
-  <dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-jackson</artifactId>
-    <version>0.11.5</version>
-  </dependency>
-  <dependency>
-    <groupId>com.auth0</groupId>
-    <artifactId>java-jwt</artifactId>
-    <version>4.3.0</version>
-  </dependency>
-  <dependency>
-    <groupId>org.hibernate.validator</groupId>
-    <artifactId>hibernate-validator</artifactId>
-    <version>8.0.0.Final</version>
-  </dependency>
-  <dependency>
-    <groupId>org.springdoc</groupId>
-    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>2.0.4</version>
-  </dependency>
-  <!--        <dependency>-->
-  <!--            <groupId>org.springframework.security</groupId>-->
-  <!--            <artifactId>spring-security-test</artifactId>-->
-  <!--            <scope>test</scope>-->
-  <!--        </dependency>-->
-
-
-  <dependency>
-    <groupId>io.awspring.cloud</groupId>
-    <artifactId>spring-cloud-starter-aws</artifactId>
-    <version>2.4.4</version>
-  </dependency>
-
-
-  <dependency>
-    <groupId>org.freemarker</groupId>
-    <artifactId>freemarker</artifactId>
-    <version>2.3.32</version> <!-- Замените на соответствующую версию -->
-  </dependency>
-
-
-  <!--        <dependency>-->
-  <!--            <groupId>org.springframework.boot</groupId>-->
-  <!--            <artifactId>spring-boot-starter-mail</artifactId>-->
-  <!--        </dependency>-->
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-jdbc</artifactId>
-  </dependency>
-
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-mail</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>runtime</scope>
-  </dependency>
-
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
     </dependency>
-
-    <!--  <dependency>-->
-<!--    <groupId>org.thymeleaf</groupId>-->
-<!--    <artifactId>thymeleaf-spring5</artifactId>-->
-<!--    <version>3.1.1.RELEASE</version>-->
-<!--  </dependency>-->
-
-
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.thymeleaf.extras</groupId>
+      <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.11.5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.11.5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.11.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.auth0</groupId>
+      <artifactId>java-jwt</artifactId>
+      <version>4.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>8.0.0.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>io.awspring.cloud</groupId>
+      <artifactId>spring-cloud-starter-aws</artifactId>
+      <version>2.4.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>2.0.1.Final</version>
+    </dependency>
 </dependencies>
 
 <build>

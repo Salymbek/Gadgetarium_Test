@@ -1,11 +1,14 @@
 package peaksoft.house.gadgetariumb9.enums;
 
 public enum Status {
-    EXPECTATION,
-    PROCESSING,
-    COURIER_ON_THE_WAY,
-    DELIVERED,
-    CANCELED,
-    READY_FOR_DELIVERY,
-    RECEIVED
+    PENDING("В ожидании"),
+    IN_PROCESSING("В обработке"),
+    READY_FOR_DELIVERY("Готов к выдаче"),
+    RECEIVED("Получен"),
+    CANCEL("Отменить"),
+    COURIER_ON_THE_WAY("Курьер в пути"),
+    DELIVERED("Доставлен");
+
+    Status(String value) {
+    }
 }
