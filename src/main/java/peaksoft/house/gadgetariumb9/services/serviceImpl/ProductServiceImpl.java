@@ -4,8 +4,10 @@ import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.dto.request.product.ProductRequest;
+import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResponse;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.models.color.CodeColor;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
@@ -18,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import peaksoft.house.gadgetariumb9.template.ProductTemplate;
 
 @Slf4j
 @Service
@@ -39,6 +42,8 @@ public class ProductServiceImpl implements ProductService {
   private final PhoneRepository phoneRepository;
 
   private final SmartWatchRepository smartWatchRepository;
+
+  private final ProductTemplate productTemplate;
 
   private final CodeColor codeColor;
 
@@ -164,4 +169,15 @@ public class ProductServiceImpl implements ProductService {
   public List<String> getColor(String name) {
     return new ArrayList<>(Collections.singleton(codeColor.ColorName(name)));
   }
+//
+  @Override
+  public ProductUserAndAdminResponse getProductById(Long productId,String colour) {
+    productRepository.findById(productId).orElseThrow(
+        () -> {
+          log.error("Product with id: " + productId + " is not found");
+          return new NotFoundException("Product with id: " + productId + " is not found");
+        });
+   return productTemplate.getProductById(productId,colour);
+  }
+  //
 }
