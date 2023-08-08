@@ -62,7 +62,6 @@ public class ProductApi {
   public MainPagePaginationResponse getAllDiscountProducts(@RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "5") int pageSize) {
     return subProductService.getAllDiscountProducts(page, pageSize);
-
   }
 
   @PostMapping("/filter")
@@ -125,7 +124,7 @@ public class ProductApi {
   public SimpleResponse editSubProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {
     return subProductService.updateSubProduct(id,productRequest);
   }
-//
+
   @GetMapping("/get-by-id")
   @PreAuthorize("hasAnyAuthority('USER','ADMIN')")
   @Operation(summary = "To get by product id the product.", description = "This method to get by product id  the product.")
@@ -133,5 +132,4 @@ public class ProductApi {
                                                     @RequestParam(defaultValue = "", required = false) String colour) {
     return productService.getProductById(productId, colour);
   }
-  //
 }
