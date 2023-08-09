@@ -81,9 +81,9 @@ public class ReviewApi {
     return service.updateComment(request);
   }
 
-  @DeleteMapping("/delete-comment")
+  @DeleteMapping("/delete-comment/{id}")
   @PreAuthorize("hasAuthority('USER')")
-  public ReviewUserResponse deleteComment(@RequestParam Long id){
+  public ReviewUserResponse deleteComment(@PathVariable Long id){
     return service.deleteComment(id);
   }
 }
