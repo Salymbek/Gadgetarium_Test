@@ -1,19 +1,18 @@
 package peaksoft.house.gadgetariumb9.services.serviceImpl;
 
-import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.dto.request.product.ProductRequest;
 import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResponse;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
-import peaksoft.house.gadgetariumb9.models.color.CodeColor;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
 import peaksoft.house.gadgetariumb9.models.*;
+import peaksoft.house.gadgetariumb9.models.color.CodeColor;
 import peaksoft.house.gadgetariumb9.repositories.*;
 import peaksoft.house.gadgetariumb9.services.ProductService;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -169,15 +168,14 @@ public class ProductServiceImpl implements ProductService {
   public List<String> getColor(String name) {
     return new ArrayList<>(Collections.singleton(codeColor.ColorName(name)));
   }
-//
+
   @Override
-  public ProductUserAndAdminResponse getProductById(Long productId,String colour) {
-    productRepository.findById(productId).orElseThrow(
+  public ProductUserAndAdminResponse getByProductId(Long subProductId, String color) {
+    subProductRepository.findById(subProductId).orElseThrow(
         () -> {
-          log.error("Product with id: " + productId + " is not found");
-          return new NotFoundException("Product with id: " + productId + " is not found");
+          log.error("SubProduct with id: " + subProductId + " is not found");
+          return new NotFoundException("SubProduct with id: " + subProductId + " is not found");
         });
-   return productTemplate.getProductById(productId,colour);
+    return productTemplate.getByProductId(subProductId,color);
   }
-  //
 }

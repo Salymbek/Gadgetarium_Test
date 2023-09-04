@@ -1,7 +1,11 @@
 package peaksoft.house.gadgetariumb9.template;
 
+import java.time.LocalDate;
 import java.util.List;
 import peaksoft.house.gadgetariumb9.dto.request.subProduct.SubProductCatalogRequest;
+import peaksoft.house.gadgetariumb9.dto.response.compare.CompareProductResponse;
+import peaksoft.house.gadgetariumb9.dto.response.compare.ComparisonCountResponse;
+import peaksoft.house.gadgetariumb9.dto.response.compare.LatestComparison;
 import peaksoft.house.gadgetariumb9.dto.response.subProduct.InfographicsResponse;
 import peaksoft.house.gadgetariumb9.dto.response.subProduct.MainPagePaginationResponse;
 import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductHistoryResponse;
@@ -14,15 +18,14 @@ public interface SubProductTemplate {
 
   InfographicsResponse infographics(String period);
 
-  List<SubProductHistoryResponse> getRecentlyViewedProducts ();
-
-  SubProductPaginationCatalogAdminResponse getGetAllSubProductAdmin(String productType, int pageSize, int pageNumber);
+  List<SubProductHistoryResponse> getRecentlyViewedProducts();
 
 
-  MainPagePaginationResponse getNewProducts(int page, int pageSize);
+  List<CompareProductResponse> getCompareParameters(String productName);
 
-  MainPagePaginationResponse getRecommendedProducts(int page, int pageSize);
+  List<ComparisonCountResponse> countCompareUser();
 
-  MainPagePaginationResponse getAllDiscountProducts(int page, int pageSize);
+  SubProductPaginationCatalogAdminResponse getGetAllSubProductAdmin(String productType, LocalDate startDate, LocalDate endDate, int pageSize, int pageNumber);
 
+  List<LatestComparison> getLatestComparison();
 }

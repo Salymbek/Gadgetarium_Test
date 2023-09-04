@@ -20,5 +20,4 @@ public class ReviewUserRequest {
   private int grade;
 
   private String imageLink;
-
 }

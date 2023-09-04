@@ -15,7 +15,7 @@ public interface ReviewService {
 
   SimpleResponse saveReview(ReviewRequest reviewRequest);
 
-  ReviewPagination getAllReviews(Long subProductId,int pageSize, int numberPage);
+  ReviewPagination getAllReviews(Long subProductId, int pageSize, int numberPage);
 
   SimpleResponse deleteReview(Long reviewId);
 
@@ -24,7 +24,9 @@ public interface ReviewService {
   SimpleResponse updateAnswer(Long reviewId, String text);
 
   ReviewGradeInfo getFeedback(Long subProductId);
+
   ReviewUserResponse updateComment(ReviewUserRequest request);
 
   ReviewUserResponse deleteComment(Long reviewId);
+
 }

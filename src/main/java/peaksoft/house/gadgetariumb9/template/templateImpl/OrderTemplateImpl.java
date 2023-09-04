@@ -5,13 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import peaksoft.house.gadgetariumb9.dto.response.order.OrderInfoResponse;
-import peaksoft.house.gadgetariumb9.dto.response.order.OrderPaginationAdmin;
-import peaksoft.house.gadgetariumb9.dto.response.order.OrderProductResponse;
-import peaksoft.house.gadgetariumb9.dto.response.order.OrderResponseAdmin;
+import peaksoft.house.gadgetariumb9.dto.response.order.*;
 import peaksoft.house.gadgetariumb9.exceptions.BadRequestException;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
 import peaksoft.house.gadgetariumb9.template.OrderTemplate;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -30,19 +28,24 @@ public class OrderTemplateImpl implements OrderTemplate {
 
     Integer subProductQuantityCount = jdbcTemplate.queryForObject(query, Integer.class);
     Integer orderQuantityCount = jdbcTemplate.queryForObject(query2, Integer.class);
-
     int difference = (subProductQuantityCount != null ? subProductQuantityCount : 0) - (orderQuantityCount != null ? orderQuantityCount : 0);
 
-    String numberIN_PROCESSING = "SELECT SUM(CASE WHEN o.status = 'IN_PROCESSING' THEN 1 ELSE 0 END) AS sum_in_processing\n" +
-        "FROM orders o;";
+    String numberIN_PROCESSING = """
+                SELECT SUM(CASE WHEN o.status = 'IN_PROCESSING' THEN 1 ELSE 0 END) AS sum_in_processing
+                FROM orders o;
+                """;
     Integer number1 = jdbcTemplate.queryForObject(numberIN_PROCESSING, Integer.class);
 
-    String numberREADY_FOR_DELIVERY = "SELECT SUM(CASE WHEN o.status = 'READY_FOR_DELIVERY' THEN 1 ELSE 0 END) AS sum_in_processing\n" +
-        "FROM orders o";
+    String numberREADY_FOR_DELIVERY = """
+                SELECT SUM(CASE WHEN o.status = 'READY_FOR_DELIVERY' THEN 1 ELSE 0 END) AS sum_in_processing
+                FROM orders o
+                """;
     Integer number2 = jdbcTemplate.queryForObject(numberREADY_FOR_DELIVERY, Integer.class);
 
-    String numberDELIVERED = "SELECT SUM(CASE WHEN o.status = 'DELIVERED' THEN 1 ELSE 0 END) AS sum_in_processing\n" +
-        "FROM orders o";
+    String numberDELIVERED = """
+                SELECT SUM(CASE WHEN o.status = 'DELIVERED' THEN 1 ELSE 0 END) AS sum_in_processing
+                FROM orders o
+                               """;
     Integer number3 = jdbcTemplate.queryForObject(numberDELIVERED, Integer.class);
     String sql = "";
 
@@ -97,6 +100,9 @@ public class OrderTemplateImpl implements OrderTemplate {
         pageSize, offset
     );
 
+    if (number1 == null || number2 == null || number3 == null) {
+      throw new NullPointerException("Number is null");
+    }
     log.info("Successfully");
     return new OrderPaginationAdmin(pageSize, pageNumber, difference, number1, number2, number3, orderResponseAdmins);
   }
@@ -149,5 +155,29 @@ public class OrderTemplateImpl implements OrderTemplate {
     );
     orderInfoResponse.setProductResponseList(orderProductResponse);
     return orderInfoResponse;
+  }
+
+  @Override
+  public List<OrderHistoryResponse> getOrdersByUserId(Long userId) {
+    String sql = """
+                SELECT o.id,
+                       o.date_of_order,
+                       o.order_number,
+                       o.status,
+                       o.total_price
+                FROM orders o
+                         JOIN users u ON o.user_id = u.id
+                WHERE u.id = ?
+                """;
+    return jdbcTemplate.query(sql,
+        (rs, rowNum) -> new OrderHistoryResponse(
+            rs.getLong("id"),
+            rs.getDate("date_of_order"),
+            rs.getInt("order_number"),
+            rs.getString("status"),
+            rs.getBigDecimal("total_price"))
+        , userId
+
+    );
   }
 }

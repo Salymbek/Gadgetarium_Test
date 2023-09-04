@@ -16,6 +16,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import peaksoft.house.gadgetariumb9.config.security.JwtService;
 import peaksoft.house.gadgetariumb9.dto.request.order.OrderUserRequest;
+import peaksoft.house.gadgetariumb9.dto.response.order.OrderHistoryResponse;
 import peaksoft.house.gadgetariumb9.dto.response.order.OrderInfoResponse;
 import peaksoft.house.gadgetariumb9.dto.response.order.OrderPaginationAdmin;
 import peaksoft.house.gadgetariumb9.dto.response.order.OrderUserResponse;
@@ -41,25 +42,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-  public static final String EMAIL_TEMPLATE = "orderemailtemplate";
-
-  private final TemplateEngine templateEngine;
+  public static final String EMAIL_TEMPLATE = "order-email-template";
 
   public static final String UTF_8_ENCODING = "UTF-8";
-
-  private final JavaMailSender emailSender;
 
   private final OrderTemplate orderTemplate;
 
   private final OrderRepository orderRepository;
+
+  private final JavaMailSender emailSender;
+
+  private final TemplateEngine templateEngine;
 
   private final JwtService jwtService;
 
   private final BasketRepository basketRepository;
 
   @Override
-  public OrderPaginationAdmin getAllOrderAdmin(String status, int pageSize, int pageNumber,
-      LocalDate startDate, LocalDate endDate) {
+  public OrderPaginationAdmin getAllOrderAdmin(String status, int pageSize, int pageNumber, LocalDate startDate, LocalDate endDate) {
     return orderTemplate.getAllOrderAdmin(status, startDate, endDate, pageSize, pageNumber);
   }
 
@@ -67,28 +67,16 @@ public class OrderServiceImpl implements OrderService {
   public SimpleResponse updateStatus(Long orderId, String status) {
     Order order = orderRepository.findById(orderId).orElseThrow(() -> {
       log.error(String.format("Order with id - %s is not found!", orderId));
-      throw new NotFoundException(String.format("Order with id - %s not found!", orderId));
+      return new NotFoundException(String.format("Order with id - %s not found!", orderId));
     });
     Status newStatus;
     switch (status) {
-      case "В ожидании" -> {
-        newStatus = Status.PENDING;
-      }
-      case "Готов к выдаче" -> {
-        newStatus = Status.READY_FOR_DELIVERY;
-      }
-      case "Получен" -> {
-        newStatus = Status.RECEIVED;
-      }
-      case "Отменить" -> {
-        newStatus = Status.CANCEL;
-      }
-      case "Курьер в пути" -> {
-        newStatus = Status.COURIER_ON_THE_WAY;
-      }
-      case "Доставлен" -> {
-        newStatus = Status.DELIVERED;
-      }
+      case "В ожидании" -> newStatus = Status.PENDING;
+      case "Готов к выдаче" -> newStatus = Status.READY_FOR_DELIVERY;
+      case "Получен" -> newStatus = Status.RECEIVED;
+      case "Отменить" -> newStatus = Status.CANCEL;
+      case "Курьер в пути" -> newStatus = Status.COURIER_ON_THE_WAY;
+      case "Доставлен" -> newStatus = Status.DELIVERED;
       default -> {
         log.error("Статус не соответствует!");
         return SimpleResponse.builder()
@@ -119,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
         log.error("Order with %s is not found" + orderId);
         return new NotFoundException("Order with %s is not found" + orderId);
       });
-      order.getSubProducts().stream().forEach(x -> x.getOrders().remove(order));
+      order.getSubProducts().forEach(x -> x.getOrders().remove(order));
 
       orderRepository.delete(order);
     }
@@ -136,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
       log.error("Order with %s is not found" + orderId);
       return new NotFoundException("Order with %s is not found" + orderId);
     });
-    order.getSubProducts().stream().forEach(x -> x.getOrders().remove(order));
+    order.getSubProducts().forEach(x -> x.getOrders().remove(order));
 
     orderRepository.delete(order);
 
@@ -145,7 +133,7 @@ public class OrderServiceImpl implements OrderService {
         .message("SubProducts with given IDs are deleted")
         .build();
   }
-//
+
   @Override
   public OrderUserResponse saveOrder(OrderUserRequest request) {
 
@@ -237,7 +225,7 @@ public class OrderServiceImpl implements OrderService {
     }
   }
 
-  private int generate() {
+  public int generate() {
     SecureRandom random = new SecureRandom();
     return random.nextInt(9999999) + 1000000;
   }
@@ -245,5 +233,8 @@ public class OrderServiceImpl implements OrderService {
   private MimeMessage getMimeMessage() {
     return emailSender.createMimeMessage();
   }
-  //
+
+  public List<OrderHistoryResponse> getOrdersByUserId(Long userId) {
+    return orderTemplate.getOrdersByUserId(userId);
+  }
 }

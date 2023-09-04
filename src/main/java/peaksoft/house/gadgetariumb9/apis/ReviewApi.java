@@ -27,63 +27,65 @@ public class ReviewApi {
 
   @Operation(summary = "Rating of reviews", description = "Get the rating summary of reviews for a specific product..")
   @GetMapping("/rating")
-  public ReviewRatingResponse countReviewsRating(@RequestParam  Long subProductId) {
+  public ReviewRatingResponse countReviewsRating(@RequestParam Long subProductId) {
     return service.countReviewsRating(subProductId);
   }
 
   @PermitAll
   @GetMapping("/get-all")
   @Operation(summary = "All reviews", description = "Get all reviews by subProduct id")
-  public ReviewPagination getAllReview (@RequestParam Long id,
+  public ReviewPagination getAllReview(@RequestParam Long subProductId,
       @RequestParam int pageSize,
-      @RequestParam int numberPage){
-    return service.getAllReviews(id,pageSize,numberPage);
+      @RequestParam int numberPage) {
+    return service.getAllReviews(subProductId, pageSize, numberPage);
   }
 
   @PostMapping
   @PreAuthorize("hasAnyAuthority('ADMIN','USER')")
   @Operation(summary = "Save review", description = "Leave a review if the user bought this product")
-  public SimpleResponse saveReview (@RequestBody ReviewRequest reviewRequest){
+  public SimpleResponse saveReview(@RequestBody ReviewRequest reviewRequest) {
     return service.saveReview(reviewRequest);
   }
 
   @DeleteMapping("/{review_id}")
   @PreAuthorize("hasAuthority('ADMIN')")
   @Operation(summary = "Delete review", description = "Delete review by id")
-  public SimpleResponse deleteReview (@PathVariable Long review_id){
+  public SimpleResponse deleteReview(@PathVariable Long review_id) {
     return service.deleteReview(review_id);
   }
 
   @PutMapping
   @PreAuthorize("hasAuthority('ADMIN')")
   @Operation(summary = "Update answer", description = "Update the answer to the question that the ADMIN left")
-  public SimpleResponse updateAnswer (@RequestBody AnswerRequest answerRequest){
-    return service.updateAnswer(answerRequest.getReviewId(),answerRequest.getReplyToComment());
+  public SimpleResponse updateAnswer(@RequestBody AnswerRequest answerRequest) {
+    return service.updateAnswer(answerRequest.getReviewId(), answerRequest.getReplyToComment());
   }
 
   @PostMapping("/reply")
   @PreAuthorize("hasAuthority('ADMIN')")
   @Operation(summary = "Reply to comment", description = "Admin answer to a comment left on this product")
-  public SimpleResponse replyToComment (@RequestBody AnswerRequest answerRequest){
+  public SimpleResponse replyToComment(@RequestBody AnswerRequest answerRequest) {
     return service.replyToComment(answerRequest);
   }
 
   @PermitAll
   @GetMapping
   @Operation(summary = "Get feedback", description = "Output of general statistics of reviews")
-  public ReviewGradeInfo getFeedback(@RequestParam Long id){
+  public ReviewGradeInfo getFeedback(@RequestParam Long id) {
     return service.getFeedback(id);
   }
 
   @PutMapping("/update-comment")
   @PreAuthorize("hasAuthority('USER')")
-  public ReviewUserResponse updateComment(@RequestBody ReviewUserRequest request){
+  @Operation(summary = "Update user review", description = "Edit your review if not answered yet")
+  public ReviewUserResponse updateComment(@RequestBody ReviewUserRequest request) {
     return service.updateComment(request);
   }
 
-  @DeleteMapping("/delete-comment/{id}")
+  @DeleteMapping("/delete-comment/{reviewId}")
   @PreAuthorize("hasAuthority('USER')")
-  public ReviewUserResponse deleteComment(@PathVariable Long id){
-    return service.deleteComment(id);
+  @Operation(summary = "Delete user review", description = "Delete your review if no answer")
+  public ReviewUserResponse deleteComment(@PathVariable Long reviewId) {
+    return service.deleteComment(reviewId);
   }
 }

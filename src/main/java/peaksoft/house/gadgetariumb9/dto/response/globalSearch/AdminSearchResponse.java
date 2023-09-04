@@ -2,7 +2,6 @@ package peaksoft.house.gadgetariumb9.dto.response.globalSearch;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import lombok.*;
 
 @Setter
@@ -13,8 +12,6 @@ import lombok.*;
 public class AdminSearchResponse {
 
   private Long productId;
-
-  private Long subProductId;
 
   private String images;
 

@@ -1,22 +1,18 @@
 package peaksoft.house.gadgetariumb9.services.serviceImpl;
 
-import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.config.security.JwtService;
 import peaksoft.house.gadgetariumb9.dto.request.review.AnswerRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewUserRequest;
-import peaksoft.house.gadgetariumb9.dto.response.review.ReviewUserResponse;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewGradeInfo;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewPagination;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewRatingResponse;
+import peaksoft.house.gadgetariumb9.dto.response.review.ReviewUserResponse;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.exceptions.AlreadyExistException;
 import peaksoft.house.gadgetariumb9.exceptions.BadCredentialException;
@@ -28,6 +24,9 @@ import peaksoft.house.gadgetariumb9.repositories.ReviewRepository;
 import peaksoft.house.gadgetariumb9.repositories.SubProductRepository;
 import peaksoft.house.gadgetariumb9.services.ReviewService;
 import peaksoft.house.gadgetariumb9.template.ReviewTemplate;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -93,10 +92,10 @@ public class ReviewServiceImpl implements ReviewService {
       }
     }
 
-    if (reviewRequest.getGrade() > 5){
+    if (reviewRequest.getGrade() > 5) {
       log.error("Grade cannot exceed 5!");
       throw new BadCredentialException("Grade cannot exceed 5!");
-    } else if (reviewRequest.getGrade() < 0){
+    } else if (reviewRequest.getGrade() < 0) {
       log.error("Grade cannot be negative!");
       throw new BadCredentialException("Grade cannot be negative!");
     }
@@ -135,10 +134,9 @@ public class ReviewServiceImpl implements ReviewService {
           "INNER JOIN orders_sub_products osp ON o.id = osp.orders_id " +
           "WHERE o.user_id = ? AND osp.sub_products_id = ?";
 
-      int count = jdbcTemplate.queryForObject(sql, new Object[]{user.getId(), subProduct.getId()},
-          Integer.class);
+      Integer count = jdbcTemplate.queryForObject(sql, Integer.class, user.getId(), subProduct.getId());
 
-      return count > 0;
+      return count != null && count > 0;
     } else {
       throw new RuntimeException("Отзыв должен быть связан с пользователем и продуктом.");
     }
@@ -148,7 +146,7 @@ public class ReviewServiceImpl implements ReviewService {
   public ReviewPagination getAllReviews(Long subProductId,
       int pageSize,
       int numberPage) {
-    return reviewTemplate.getAll(subProductId,pageSize,numberPage);
+    return reviewTemplate.getAll(subProductId, pageSize, numberPage);
   }
 
   @Override
@@ -228,15 +226,11 @@ public class ReviewServiceImpl implements ReviewService {
   @Override
   public ReviewUserResponse updateComment(ReviewUserRequest request) {
     Review review = reviewRepository.findById(request.getReviewId()).orElseThrow(() -> {
-          log.error(String.format("Review with id %s not found", request.getReviewId()));
-          return new NotFoundException(String.format("Review with id %s not found", request.getReviewId()));
+      log.error(String.format("Review with id %s not found", request.getReviewId()));
+      return new NotFoundException(String.format("Review with id %s not found", request.getReviewId()));
     });
 
     User user = jwtService.getAuthenticationUser();
-
-    if (user == null){
-      throw new AuthorizationServiceException("Not authorized!");
-    }
 
     if (review.getUser().equals(user)){
       log.info("You are the owner of this review!");
@@ -245,14 +239,14 @@ public class ReviewServiceImpl implements ReviewService {
         review.setGrade(request.getGrade());
         review.setImageLink(request.getImageLink());
         reviewRepository.save(review);
-        return new ReviewUserResponse(user.getEmail(),true,"Your comment successfully updated!");
+        return new ReviewUserResponse(user.getEmail(),"Your comment successfully updated!");
       } else {
         log.error("You can't edit a comment because an admin has already replied to it!");
         throw new BadCredentialException("You can't edit a comment because an admin has already replied to it!");
       }
     } else {
       log.error("Access denied. You are not the owner of this review!");
-      return new ReviewUserResponse(user.getEmail(),false,"Access denied. You are not the owner of this review!");
+      return new ReviewUserResponse(user.getEmail(),"Access denied. You are not the owner of this review!");
     }
 
   }
@@ -266,22 +260,18 @@ public class ReviewServiceImpl implements ReviewService {
 
     User user = jwtService.getAuthenticationUser();
 
-    if (user == null){
-      throw new AuthorizationServiceException("Not authorized!");
-    }
-
     if (review.getUser().equals(user)){
       log.info("You are the owner of this review!");
       if (review.getReplyToComment() == null){
         reviewRepository.delete(review);
-        return new ReviewUserResponse(user.getEmail(),true,"Your comment successfully deleted!");
+        return new ReviewUserResponse(user.getEmail(),"Your comment successfully deleted!");
       } else {
         log.error("You can't delete a comment because an admin has already replied to it!");
         throw new BadCredentialException("You can't delete a comment because an admin has already replied to it!");
       }
     } else {
       log.error("Access denied. You are not the owner of this review!");
-      return new ReviewUserResponse(user.getEmail(),false,"Access denied. You are not the owner of this review!");
+      return new ReviewUserResponse(user.getEmail(),"Access denied. You are not the owner of this review!");
     }
   }
 }

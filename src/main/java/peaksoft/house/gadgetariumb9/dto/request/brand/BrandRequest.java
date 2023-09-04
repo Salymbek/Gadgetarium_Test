@@ -18,6 +18,4 @@ public class BrandRequest {
 
   @NotBlank(message = "The image must be specified!")
   private String image;
-
-
 }

@@ -3,10 +3,11 @@ package peaksoft.house.gadgetariumb9.dto.response.review;
 import lombok.*;
 
 @NoArgsConstructor
-@Builder
 @Getter
 @Setter
 public class ReviewResponse {
+
+  private Long reviewId;
 
   private String userFullName;
 
@@ -22,8 +23,11 @@ public class ReviewResponse {
 
   private String imageLink;
 
-  public ReviewResponse(String userFullName, String userAvatar,
+  private boolean isMy;
+
+  public ReviewResponse(Long reviewId, String userFullName, String userAvatar,
       int grade, String comment, String answer, String dateOfCreatAd, String imageLink) {
+    this.reviewId = reviewId;
     this.userFullName = userFullName;
     this.userAvatar = userAvatar;
     this.grade = grade;

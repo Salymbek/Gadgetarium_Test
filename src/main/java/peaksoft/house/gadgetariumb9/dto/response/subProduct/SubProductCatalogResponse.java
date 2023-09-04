@@ -1,6 +1,9 @@
 package peaksoft.house.gadgetariumb9.dto.response.subProduct;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.math.BigDecimal;
 
 @Getter
@@ -21,6 +24,10 @@ public class SubProductCatalogResponse {
   private int rating;
 
   private BigDecimal price;
+
+  private boolean isFavorite;
+
+  private boolean isComparison;
 
   @Builder
   public SubProductCatalogResponse(Long id, int discount, String image, int quantity, String name,

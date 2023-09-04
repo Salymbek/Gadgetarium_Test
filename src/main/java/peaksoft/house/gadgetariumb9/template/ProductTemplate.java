@@ -4,6 +4,5 @@ import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResp
 
 public interface ProductTemplate {
 
-  ProductUserAndAdminResponse getProductById (Long productId,String color);
-
+  ProductUserAndAdminResponse getByProductId (Long subProductId, String color);
 }

@@ -1,6 +1,5 @@
 package peaksoft.house.gadgetariumb9.services;
 
-
 import peaksoft.house.gadgetariumb9.dto.request.product.ProductRequest;
 import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResponse;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
@@ -11,7 +10,6 @@ public interface ProductService {
   SimpleResponse saveProduct(ProductRequest productRequest);
 
   List<String> getColor(String name);
-//
-  ProductUserAndAdminResponse getProductById (Long productId,String color);
-  //
+
+  ProductUserAndAdminResponse getByProductId(Long subProductId, String color);
 }

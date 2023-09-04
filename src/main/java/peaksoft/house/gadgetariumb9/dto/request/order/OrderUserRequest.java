@@ -1,6 +1,5 @@
 package peaksoft.house.gadgetariumb9.dto.request.order;
 
-import java.util.List;
 import lombok.*;
 import peaksoft.house.gadgetariumb9.enums.TypeDelivery;
 import peaksoft.house.gadgetariumb9.enums.TypePayment;

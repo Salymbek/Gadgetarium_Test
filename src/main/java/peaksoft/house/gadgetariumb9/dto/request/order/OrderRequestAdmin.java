@@ -1,5 +1,6 @@
 package peaksoft.house.gadgetariumb9.dto.request.order;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class OrderRequestAdmin {
 
   private String fullName;
@@ -22,14 +25,4 @@ public class OrderRequestAdmin {
   private String typeDelivery;
 
   private String status;
-
-  @Builder
-  public OrderRequestAdmin(String fullName, int orderNumber, int quantity, BigDecimal totalPrice, String typeDelivery, String status) {
-    this.fullName = fullName;
-    this.orderNumber = orderNumber;
-    this.quantity = quantity;
-    this.totalPrice = totalPrice;
-    this.typeDelivery = typeDelivery;
-    this.status = status;
-  }
 }

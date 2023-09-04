@@ -1,7 +1,6 @@
 package peaksoft.house.gadgetariumb9.services.serviceImpl;
 
 import jakarta.transaction.Transactional;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -9,20 +8,25 @@ import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.config.security.JwtService;
 import peaksoft.house.gadgetariumb9.dto.request.product.ProductRequest;
 import peaksoft.house.gadgetariumb9.dto.request.subProduct.SubProductCatalogRequest;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.InfographicsResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.MainPagePaginationResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductHistoryResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductPagination;
-import peaksoft.house.gadgetariumb9.models.User;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductPaginationCatalogAdminResponse;
+import peaksoft.house.gadgetariumb9.dto.response.compare.CompareProductResponse;
+import peaksoft.house.gadgetariumb9.dto.response.compare.ComparisonCountResponse;
+import peaksoft.house.gadgetariumb9.dto.response.compare.LatestComparison;
+import peaksoft.house.gadgetariumb9.dto.response.subProduct.*;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.exceptions.BadRequestException;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
-import peaksoft.house.gadgetariumb9.models.*;
+import peaksoft.house.gadgetariumb9.models.Category;
+import peaksoft.house.gadgetariumb9.models.SubProduct;
+import peaksoft.house.gadgetariumb9.models.User;
 import peaksoft.house.gadgetariumb9.repositories.*;
 import peaksoft.house.gadgetariumb9.services.SubProductService;
+import peaksoft.house.gadgetariumb9.template.MainPageProducts;
 import peaksoft.house.gadgetariumb9.template.SubProductTemplate;
+
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
+
 @Slf4j
 @Service
 @Transactional
@@ -30,6 +34,7 @@ import java.util.Objects;
 public class SubProductServiceImpl implements SubProductService {
 
   private final SubProductTemplate subProductTemplate;
+
   private final JwtService jwtService;
 
   private final SubProductRepository subProductRepository;
@@ -46,6 +51,7 @@ public class SubProductServiceImpl implements SubProductService {
 
   private final CategoryRepository categoryRepository;
 
+  private final MainPageProducts mainPageProducts;
 
   @Override
   public SubProductPagination getSubProductCatalogs(
@@ -61,17 +67,17 @@ public class SubProductServiceImpl implements SubProductService {
 
   @Override
   public MainPagePaginationResponse getNewProducts(int page, int pageSize) {
-    return subProductTemplate.getNewProducts(page, pageSize);
+    return mainPageProducts.getNewProducts(page, pageSize);
   }
 
   @Override
   public MainPagePaginationResponse getRecommendedProducts(int page, int pageSize) {
-    return subProductTemplate.getRecommendedProducts(page, pageSize);
+    return mainPageProducts.getRecommendedProducts(page, pageSize);
   }
 
   @Override
   public MainPagePaginationResponse getAllDiscountProducts(int page, int pageSize) {
-    return subProductTemplate.getAllDiscountProducts(page, pageSize);
+    return mainPageProducts.getAllDiscountProducts(page, pageSize);
   }
 
   public void addRecentlyViewedProduct(Long productId) {
@@ -87,9 +93,8 @@ public class SubProductServiceImpl implements SubProductService {
   }
 
   @Override
-  public SubProductPaginationCatalogAdminResponse getGetAllSubProductAdmin(String productType, int pageSize, int pageNumber) {
-    return subProductTemplate.getGetAllSubProductAdmin(productType,
-        pageSize, pageNumber);
+  public SubProductPaginationCatalogAdminResponse getGetAllSubProductAdmin(String productType, LocalDate startDate, LocalDate endDate, int pageSize, int pageNumber) {
+    return subProductTemplate.getGetAllSubProductAdmin(productType, startDate, endDate, pageSize, pageNumber);
   }
 
   @Override
@@ -480,4 +485,53 @@ public class SubProductServiceImpl implements SubProductService {
         .message("Successfully updated")
         .build();
   }
+
+  @Override
+  public List<ComparisonCountResponse> countCompareUser() {
+    return subProductTemplate.countCompareUser();
+  }
+
+  @Override
+  public List<CompareProductResponse> getCompareParameters(String productName) {
+    return subProductTemplate.getCompareParameters(productName);
+  }
+
+  @Override
+  @Transactional
+  public SimpleResponse comparisonAddOrDelete(Long id, boolean addOrDelete) {
+    SubProduct subProduct = subProductRepository.findById(id).orElseThrow(() -> new NotFoundException("This product ID: " + id + " not found!"));
+    User user = jwtService.getAuthenticationUser();
+    if (addOrDelete) {
+      if (user.getComparison().contains(subProduct.getId())) {
+        throw new BadRequestException("The product with the ID %s already exists in comparison!".formatted(id));
+      }
+      user.getComparison().add(subProduct.getId());
+      userRepository.save(user);
+      return SimpleResponse.builder().status(HttpStatus.OK).message("The product has been successfully added to the comparison!").build();
+    } else {
+      if (!user.getComparison().contains(subProduct.getId())) {
+        throw new NotFoundException("The product with the ID %s was not found in the user comparison!".formatted(id));
+      }
+      user.getComparison().remove(subProduct.getId());
+      userRepository.save(user);
+      return SimpleResponse.builder().status(HttpStatus.OK).message("The product has been successfully removed from the comparison!").build();
+    }
+  }
+
+  @Override
+  public SimpleResponse clearUserCompare(List<Long> subProductIds) {
+    User user = jwtService.getAuthenticationUser();
+    for (Long l : subProductIds) {
+      user.getComparison().remove(l);
+    }
+    userRepository.save(user);
+    log.error("Comparison cleared!");
+    return SimpleResponse.builder().message("Comparison cleared!").status(HttpStatus.OK).build();
+  }
+
+  @Override
+  public List<LatestComparison> getLatestComparison() {
+    return subProductTemplate.getLatestComparison();
+  }
+
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class GadgetariumTestApplication {
     public static void main(String[] args) {
         SpringApplication.run(GadgetariumTestApplication.class, args);
+        System.out.println("Welcome to Java-9's Gadgetarium project!");
     }
 
     @GetMapping

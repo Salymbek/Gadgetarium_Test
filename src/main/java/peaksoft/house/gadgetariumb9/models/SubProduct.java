@@ -1,10 +1,10 @@
 package peaksoft.house.gadgetariumb9.models;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
 import lombok.*;
 import org.springframework.lang.Nullable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import static jakarta.persistence.CascadeType.*;
 
@@ -19,7 +19,7 @@ public class SubProduct {
 
     @Id
     @GeneratedValue(generator = "sub_product_gen", strategy = GenerationType.SEQUENCE)
-    @SequenceGenerator(name = "sub_product_gen", sequenceName = "sub_product_seq", allocationSize = 1, initialValue = 4)
+    @SequenceGenerator(name = "sub_product_gen", sequenceName = "sub_product_seq", allocationSize = 1, initialValue = 16)
 
     private Long id;
 
@@ -75,7 +75,7 @@ public class SubProduct {
         cascade = {ALL})
     private List<Review> reviews;
 
-    public void addReviews (Review review) {
+    public void addReviews(Review review) {
         if (reviews == null) {
             reviews = new ArrayList<>();
         }
