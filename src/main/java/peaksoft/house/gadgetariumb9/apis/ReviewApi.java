@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import peaksoft.house.gadgetariumb9.dto.request.review.AnswerRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewUserRequest;
+import peaksoft.house.gadgetariumb9.dto.request.review.ViewReviewRequest;
+import peaksoft.house.gadgetariumb9.dto.response.review.AdminReviewPagination;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewGradeInfo;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewPagination;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewRatingResponse;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewUserResponse;
+import peaksoft.house.gadgetariumb9.dto.response.review.ReviewsRatings;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.services.ReviewService;
 
@@ -20,7 +23,6 @@ import peaksoft.house.gadgetariumb9.services.ReviewService;
 @RequiredArgsConstructor
 @RequestMapping("/api/reviews")
 @Tag(name = "Review API", description = "Endpoints for managing and retrieving reviews for products.")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ReviewApi {
 
   private final ReviewService service;
@@ -35,9 +37,25 @@ public class ReviewApi {
   @GetMapping("/get-all")
   @Operation(summary = "All reviews", description = "Get all reviews by subProduct id")
   public ReviewPagination getAllReview(@RequestParam Long subProductId,
-      @RequestParam int pageSize,
-      @RequestParam int numberPage) {
+      @RequestParam(defaultValue = "5") int pageSize,
+      @RequestParam(defaultValue = "1") int numberPage) {
     return service.getAllReviews(subProductId, pageSize, numberPage);
+  }
+
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @GetMapping("/get-all-reviews")
+  @Operation(summary = "Get all reviews", description = "Get all reviews for product")
+  public AdminReviewPagination getAllReviewsForAdmin(@RequestParam(defaultValue = "Все отзывы") String filter,
+      @RequestParam(defaultValue = "5") int pageSize,
+      @RequestParam(defaultValue = "1") int numberPage) {
+    return service.getAllReviewsForAdmin(filter, pageSize, numberPage);
+  }
+
+  @PermitAll
+  @GetMapping("/all-ratings-info")
+  @Operation(summary = "Get all ratings", description = "Get all ratings for products")
+  public ReviewsRatings getAllRatings (){
+    return service.getAllRatings();
   }
 
   @PostMapping
@@ -65,7 +83,7 @@ public class ReviewApi {
   @PreAuthorize("hasAuthority('ADMIN')")
   @Operation(summary = "Reply to comment", description = "Admin answer to a comment left on this product")
   public SimpleResponse replyToComment(@RequestBody AnswerRequest answerRequest) {
-    return service.replyToComment(answerRequest);
+    return service.replyToComment(answerRequest.getReviewId(), answerRequest.getReplyToComment());
   }
 
   @PermitAll
@@ -87,5 +105,12 @@ public class ReviewApi {
   @Operation(summary = "Delete user review", description = "Delete your review if no answer")
   public ReviewUserResponse deleteComment(@PathVariable Long reviewId) {
     return service.deleteComment(reviewId);
+  }
+
+  @PutMapping("/update-view")
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @Operation(summary = "Update review viewed", description = "Updating  viewed review for product")
+  public SimpleResponse updateReviewView (@RequestBody ViewReviewRequest request){
+    return service.updateView(request);
   }
 }

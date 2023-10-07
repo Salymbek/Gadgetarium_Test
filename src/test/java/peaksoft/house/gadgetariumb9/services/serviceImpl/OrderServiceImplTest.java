@@ -1,10 +1,9 @@
-package peaksoft.house.gadgetariumb9.repositories;
+package peaksoft.house.gadgetariumb9.services.serviceImpl;
 
 import jakarta.mail.internet.MimeMessage;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -18,13 +17,17 @@ import peaksoft.house.gadgetariumb9.models.Basket;
 import peaksoft.house.gadgetariumb9.models.Order;
 import peaksoft.house.gadgetariumb9.models.SubProduct;
 import peaksoft.house.gadgetariumb9.models.User;
-import peaksoft.house.gadgetariumb9.services.serviceImpl.OrderServiceImpl;
+import peaksoft.house.gadgetariumb9.repositories.BasketRepository;
+import peaksoft.house.gadgetariumb9.repositories.OrderRepository;
+import peaksoft.house.gadgetariumb9.repositories.UserRepository;
 import peaksoft.house.gadgetariumb9.template.OrderTemplate;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import org.springframework.http.HttpStatus;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
 class OrderServiceImplTest {
 
@@ -40,9 +43,10 @@ class OrderServiceImplTest {
 
   private JavaMailSender emailSender;
 
-  private OrderTemplate orderTemplate;
 
   private MimeMessage mimeMessage;
+
+  private UserRepository userRepository;
 
   @BeforeEach
   public void setup() {
@@ -51,7 +55,7 @@ class OrderServiceImplTest {
     jwtService = mock(JwtService.class);
     templateEngine = mock(TemplateEngine.class);
     emailSender = mock(JavaMailSender.class);
-    orderTemplate = mock(OrderTemplate.class);
+    OrderTemplate orderTemplate = mock(OrderTemplate.class);
     mimeMessage = mock(MimeMessage.class);
 
     orderService = new OrderServiceImpl(
@@ -60,7 +64,7 @@ class OrderServiceImplTest {
         emailSender,
         templateEngine,
         jwtService,
-        basketRepository
+        userRepository
     );
   }
 

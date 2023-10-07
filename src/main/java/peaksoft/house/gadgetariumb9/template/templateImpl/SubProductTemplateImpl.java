@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.config.security.JwtService;
 import peaksoft.house.gadgetariumb9.dto.request.subProduct.SubProductCatalogRequest;
@@ -15,13 +14,12 @@ import peaksoft.house.gadgetariumb9.enums.Purpose;
 import peaksoft.house.gadgetariumb9.exceptions.BadRequestException;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
 import peaksoft.house.gadgetariumb9.models.User;
-import peaksoft.house.gadgetariumb9.repositories.UserRepository;
+import peaksoft.house.gadgetariumb9.services.UtilitiesService;
 import peaksoft.house.gadgetariumb9.template.SubProductTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -29,11 +27,12 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class SubProductTemplateImpl implements SubProductTemplate {
-  private final UserRepository userRepository;
 
   private final JdbcTemplate jdbcTemplate;
 
   private final JwtService jwtService;
+
+  private final UtilitiesService utilitiesService;
 
 
   private List<Integer> pageSizeAndOffset(int pageNumber, int pageSize) {
@@ -41,61 +40,37 @@ public class SubProductTemplateImpl implements SubProductTemplate {
     return Arrays.asList(pageSize, offset);
   }
 
-  private String email() {
-    return SecurityContextHolder.getContext().getAuthentication().getName();
-  }
-
-  private List<Long> getFavorites() {
-    List<Long> favorites = Collections.emptyList();
-    if (!email().equalsIgnoreCase("anonymousUser")) {
-      User user = userRepository.getUserByEmail(email())
-          .orElseThrow(() -> new NotFoundException("User with email: %s not found".formatted(email())));
-      favorites = jdbcTemplate.queryForList(
-          "SELECT uf.favorite FROM user_favorite uf WHERE uf.user_id = ?",
-          Long.class,
-          user.getId());
-    }
-    return favorites;
-  }
-
-  private List<Long> getComparison() {
-    List<Long> comparisons = Collections.emptyList();
-    if (!email().equalsIgnoreCase("anonymousUser")) {
-      User user = userRepository.getUserByEmail(email())
-          .orElseThrow(() -> new NotFoundException("User with email: %s not found".formatted(email())));
-      comparisons = jdbcTemplate.queryForList(
-          "SELECT uc.comparison FROM user_comparison uc WHERE uc.user_id = ?",
-          Long.class,
-          user.getId());
-    }
-    return comparisons;
-  }
-
   @Override
   public SubProductPagination getProductFilter(SubProductCatalogRequest subProductCatalogRequest, int pageSize, int pageNumber) {
     String sql = """
-                   SELECT s.id,
-                          d.sale,
-                          (SELECT spi.images
-                           FROM sub_product_images spi
-                           WHERE spi.sub_product_id = s.id
-                           LIMIT 1) AS image,
-                          s.quantity,
-                          p2.name,
-                          s.price
-                   FROM sub_products s
-                            LEFT JOIN discounts d ON s.id = d.sub_product_id
-                            LEFT JOIN phones p ON s.id = p.sub_product_id
-                            LEFT JOIN laptops l ON s.id = l.sub_product_id
-                            LEFT JOIN smart_watches sw ON s.id = sw.sub_product_id
-                            LEFT JOIN products p2 ON s.product_id = p2.id
-                            LEFT JOIN brands b ON p2.brand_id = b.id
-                            JOIN sub_categories sc ON p2.sub_category_id = sc.id
-                            JOIN categories c ON p2.category_id = c.id
-                   WHERE c.title ILIKE ?
+                SELECT p2.id      AS product_id,
+                       s.id      AS sub_product_id,
+                       d.sale,
+                       (SELECT spi.images
+                        FROM sub_product_images spi
+                        WHERE spi.sub_product_id = s.id
+                        LIMIT 1) AS image,
+                       s.quantity,
+                       p2.name,
+                       s.price
+                FROM sub_products s
+                         LEFT JOIN discounts d ON s.id = d.sub_product_id
+                         LEFT JOIN phones p ON s.id = p.sub_product_id
+                         LEFT JOIN laptops l ON s.id = l.sub_product_id
+                         LEFT JOIN smart_watches sw ON s.id = sw.sub_product_id
+                         LEFT JOIN products p2 ON s.product_id = p2.id
+                         LEFT JOIN brands b ON p2.brand_id = b.id
+                         JOIN sub_categories sc ON p2.sub_category_id = sc.id
+                         JOIN categories c ON p2.category_id = c.id
+                         JOIN sub_categories scs ON p2.sub_category_id = scs.id
+                WHERE c.title ILIKE ?
                 """;
     List<Object> params = new ArrayList<>();
     params.add(subProductCatalogRequest.getGadgetType());
+    if (subProductCatalogRequest.getSubCategoryIds().get(0) > 0) {
+      sql += "AND scs.id = ANY (?)";
+      params.add(subProductCatalogRequest.getSubCategoryIds().toArray(new Long[0]));
+    }
     if (subProductCatalogRequest.getBrandIds().get(0) > 0) {
       sql += "AND b.id = ANY (?)";
       params.add(subProductCatalogRequest.getBrandIds().toArray(new Long[0]));
@@ -121,8 +96,8 @@ public class SubProductTemplateImpl implements SubProductTemplate {
       params.add(subProductCatalogRequest.getRom().toArray(new Integer[0]));
     }
     if (subProductCatalogRequest.getSim().get(0) > 0) {
-      sql += " AND (p.sim = ?)";
-      params.add(subProductCatalogRequest.getSim());
+      sql += " AND (p.sim = ANY (?))";
+      params.add(subProductCatalogRequest.getSim().toArray(new Integer[0]));
     }
     if (!subProductCatalogRequest.getBatteryCapacity().get(0).equalsIgnoreCase("string")) {
       sql += " AND (p.battery_capacity = ANY (?))";
@@ -168,6 +143,11 @@ public class SubProductTemplateImpl implements SubProductTemplate {
       sql += " AND (sw.hull_shape = ANY(?))";
       params.add(subProductCatalogRequest.getHullShapes().toArray(new String[0]));
     }
+    String waterproof = subProductCatalogRequest.getWaterproof();
+    if (!"string".equalsIgnoreCase(waterproof)) {
+      sql += " AND sw.waterproof = ? ";
+      params.add("True".equalsIgnoreCase(waterproof));
+    }
     if (subProductCatalogRequest.getSorting().equalsIgnoreCase("Новинки")) {
       sql += " ORDER BY s.id DESC";
     } else if (subProductCatalogRequest.getSorting().equalsIgnoreCase("Все скидки")) {
@@ -186,20 +166,46 @@ public class SubProductTemplateImpl implements SubProductTemplate {
     sql += " LIMIT ? OFFSET ?";
     params.add(pageSizeAndOffset(pageNumber, pageSize).get(0));
     params.add(pageSizeAndOffset(pageNumber, pageSize).get(1));
-    List<SubProductCatalogResponse> subProductCatalogResponses = jdbcTemplate.query(sql, (rs, rowNum) -> new SubProductCatalogResponse(rs.getLong("id"), rs.getInt("sale"), rs.getString("image"), rs.getInt("quantity"), rs.getString("name"), rs.getBigDecimal("price")), params.toArray());
+    List<SubProductCatalogResponse> subProductCatalogResponses = jdbcTemplate.query(sql, (rs, rowNum) ->
+            new SubProductCatalogResponse(
+                rs.getLong("sub_product_id"),
+                rs.getLong("product_id"),
+                rs.getInt("sale"),
+                rs.getString("image"),
+                rs.getInt("quantity"),
+                rs.getString("name"),
+                rs.getBigDecimal("price")),
+        params.toArray());
     log.info("Filtering completed successfully");
-    List<Long> favorites = getFavorites();
+    List<Long> favorites = utilitiesService.getFavorites();
 
     for (SubProductCatalogResponse s : subProductCatalogResponses) {
-      s.setFavorite(favorites.contains(s.getId()));
+      s.setFavorite(favorites.contains(s.getSubProductId()));
     }
 
-    List<Long> comparisons = getComparison();
+    List<Long> comparisons = utilitiesService.getComparison();
 
     for (SubProductCatalogResponse s : subProductCatalogResponses) {
-      s.setComparison(comparisons.contains(s.getId()));
+      s.setComparison(comparisons.contains(s.getSubProductId()));
     }
-    return new SubProductPagination(subProductCatalogResponses, pageSize, pageNumber);
+
+    List<Long> basket = utilitiesService.getBasket();
+
+    for (SubProductCatalogResponse s : subProductCatalogResponses) {
+      s.setBasket(basket.contains(s.getSubProductId()));
+    }
+    Integer quan = jdbcTemplate.queryForObject("""
+                        SELECT count(sc.id) FROM sub_products sc
+                        JOIN products p ON sc.product_id = p.id
+                        JOIN categories c ON p.category_id = c.id
+                        WHERE c.title ILIKE ?
+                        """,
+        Integer.class,
+        subProductCatalogRequest.getGadgetType());
+    if (quan == null) {
+      throw new NullPointerException("");
+    }
+    return new SubProductPagination(quan, subProductCatalogResponses, pageSize, pageNumber);
   }
 
   @Override
@@ -408,7 +414,7 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                         GROUP BY s.id, s.article_number, p2.created_at, s.quantity, s.price, d.sale, b.name, p2.name, s.rating
                         ORDER BY s.id
                         LIMIT ? ;
-                          """;
+                        """;
       } else if (productType.equalsIgnoreCase("До 50%")) {
         sql = """
                         SELECT s.id                                AS subProductId,
@@ -483,7 +489,7 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                                 LIMIT 1)                           AS images,
                                s.article_number                    AS articleNumber,
                                CONCAT(b.name, ' ', p2.name)        AS name,
-                               p2.created_at                    AS dateOfCreation,
+                               p2.created_at                       AS dateOfCreation,
                                s.quantity                          AS quantity,
                                CONCAT(s.price, ', ', d.sale)       AS price_and_sale,
                                SUM(s.price * (1 - d.sale / 100.0)) AS total_with_discount,
@@ -562,8 +568,8 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                                  JOIN brands b ON p.brand_id = b.id
                                  JOIN user_comparison uc ON uc.comparison = sp.id
                                  JOIN users u ON uc.user_id = u.id
-                        WHERE u.id = ?         
-                                                """, (rs, rowNum) ->
+                        WHERE u.id = ?
+                        """, (rs, rowNum) ->
             LatestComparison
                 .builder()
                 .subProductId(rs.getLong("id"))
@@ -572,6 +578,27 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                 .price(rs.getBigDecimal("price"))
                 .build(),
         user.getId());
+  }
+
+  @Override
+  public List<CountColorResponse> getCountColor(Long categoryId) {
+
+    String sql = """
+                SELECT sp.code_color        AS color,
+                       count(sp.code_color) AS count
+                FROM sub_products sp
+                         JOIN products p ON sp.product_id = p.id
+                         JOIN categories c ON p.category_id = c.id
+                WHERE c.id = ?
+                GROUP BY color
+                """;
+
+    return jdbcTemplate.query(sql, (rs, rowNum) -> {
+      CountColorResponse colorResponse = new CountColorResponse();
+      colorResponse.setCodeColor(rs.getString("color"));
+      colorResponse.setCountColor(rs.getInt("count"));
+      return colorResponse;
+    }, categoryId);
   }
 
   public List<CompareProductResponse> getCompareParameters(String productName) {
@@ -585,7 +612,6 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                                 sp.code_color          AS color,
                                 sp.screen_resolution   AS screen,
                                 sp.rom                 AS rom,
-                                sp.additional_features AS operational_systems,
                                 cat.title              AS category_title,
                                 sc.title               AS sub_category_title,
                                 ph.sim                 AS sim,
@@ -617,9 +643,9 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                          JOIN user_comparison uc ON uc.comparison = sp.id
                          JOIN users u ON uc.user_id = u.id
                 WHERE cat.title ILIKE ? AND u.id = ?
-                   """;
+                """;
     if (productName.equalsIgnoreCase("Phone") || productName.equalsIgnoreCase("Tablet")) {
-      return jdbcTemplate.query(
+      List<CompareProductResponse> compareSmartPhoneResponseList = jdbcTemplate.query(
           sql,
           ((rs, rowNum) -> CompareSmartPhoneResponse
               .builder()
@@ -631,7 +657,6 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .color(rs.getString("color"))
               .screen(rs.getString("screen"))
               .rom(rs.getInt("rom"))
-              .operationalSystems(rs.getString("operational_systems"))
               .catTitle(rs.getString("category_title"))
               .subCatTitle(rs.getString("sub_category_title"))
               .image(rs.getString("image"))
@@ -641,8 +666,13 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .screenSize(rs.getDouble("screen_size"))
               .build()),
           "%Phone%", user.getId());
+      List<Long> basket = utilitiesService.getBasket();
+      for (CompareProductResponse c : compareSmartPhoneResponseList) {
+        c.setIn_basket(basket.contains(c.getSubProductId()));
+      }
+      return compareSmartPhoneResponseList;
     } else if (productName.equalsIgnoreCase("Laptop")) {
-      return jdbcTemplate.query(
+      List<CompareProductResponse> compareProductResponses = jdbcTemplate.query(
           sql,
           ((rs, rowNum) -> CompareLaptopResponse
               .builder()
@@ -654,7 +684,6 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .color(rs.getString("color"))
               .screen(rs.getString("screen"))
               .rom(rs.getInt("rom"))
-              .operationalSystems(rs.getString("operational_systems"))
               .catTitle(rs.getString("category_title"))
               .subCatTitle(rs.getString("sub_category_title"))
               .image(rs.getString("image"))
@@ -664,8 +693,13 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .video_memory(rs.getInt("video_memory"))
               .build()),
           "%Laptop%", user.getId());
+      List<Long> basket = utilitiesService.getBasket();
+      for (CompareProductResponse c : compareProductResponses) {
+        c.setIn_basket(basket.contains(c.getSubProductId()));
+      }
+      return compareProductResponses;
     } else if (productName.equalsIgnoreCase("Smart Watch")) {
-      return jdbcTemplate.query(
+      List<CompareProductResponse> compareProductResponses = jdbcTemplate.query(
           sql,
           ((rs, rowNum) -> CompareSmartWatchResponse
               .builder()
@@ -677,7 +711,6 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .color(rs.getString("color"))
               .screen(rs.getString("screen"))
               .rom(rs.getInt("rom"))
-              .operationalSystems(rs.getString("operational_systems"))
               .catTitle(rs.getString("category_title"))
               .subCatTitle(rs.getString("sub_category_title"))
               .image(rs.getString("image"))
@@ -690,7 +723,12 @@ public class SubProductTemplateImpl implements SubProductTemplate {
               .displayDiscount(rs.getDouble("display_discount"))
               .build())
           , "%Smart Watch%", user.getId());
+      List<Long> basket = utilitiesService.getBasket();
+      for (CompareProductResponse c : compareProductResponses) {
+        c.setIn_basket(basket.contains(c.getSubProductId()));
+      }
     }
+
     return null;
   }
 
@@ -706,9 +744,8 @@ public class SubProductTemplateImpl implements SubProductTemplate {
                          JOIN products p ON p.id = sp.product_id
                          JOIN categories c ON c.id = p.category_id
                 WHERE uc.user_id = ?
-                  AND c.title IN ('Phone', 'Smart Watch', 'Tablet', 'Laptop')
                 GROUP BY c.title;
-                            """;
+                """;
     return jdbcTemplate.query(
         compare,
         (rs) -> {

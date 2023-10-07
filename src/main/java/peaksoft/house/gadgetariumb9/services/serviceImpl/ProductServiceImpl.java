@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.dto.request.product.ProductRequest;
+import peaksoft.house.gadgetariumb9.dto.response.product.AllInformationProduct;
+import peaksoft.house.gadgetariumb9.dto.response.product.ProductDetailsResponse;
 import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResponse;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
@@ -14,10 +16,7 @@ import peaksoft.house.gadgetariumb9.repositories.*;
 import peaksoft.house.gadgetariumb9.services.ProductService;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import peaksoft.house.gadgetariumb9.template.ProductTemplate;
 
@@ -68,7 +67,8 @@ public class ProductServiceImpl implements ProductService {
 
     ZoneId zoneId = ZoneId.systemDefault();
     ZonedDateTime startDateZ = ZonedDateTime.of(productRequest.getDateOfIssue().atStartOfDay(), zoneId);
-
+    ZonedDateTime now = ZonedDateTime.now();
+    ZonedDateTime modifiedDateTime = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
     Product product = new Product();
     product.setCategory(category);
     product.setSubCategory(subCategory);
@@ -76,7 +76,7 @@ public class ProductServiceImpl implements ProductService {
     product.setName(productRequest.getName());
     product.setGuarantee(productRequest.getGuarantee());
     product.setDataOfIssue(startDateZ);
-    product.setCreatedAt(ZonedDateTime.now());
+    product.setCreatedAt(modifiedDateTime);
 
     List<SubProduct> subProducts = productRequest.getSubProductRequests().stream()
         .map(subProductRequest -> {
@@ -149,7 +149,7 @@ public class ProductServiceImpl implements ProductService {
     product.setSubProducts(subProducts);
     product.setVideoLink(productRequest.getVideoLink());
     product.setPdf(productRequest.getPdf());
-    product.setDescription(product.getDescription());
+    product.setDescription(productRequest.getDescription());
 
     log.info("Product saved successfully");
     productRepository.save(product);
@@ -166,16 +166,34 @@ public class ProductServiceImpl implements ProductService {
   }
 
   public List<String> getColor(String name) {
-    return new ArrayList<>(Collections.singleton(codeColor.ColorName(name)));
+    return codeColor.ColorName(name);
+  }
+
+  public Map<String, String> getColorNames(List<String> codes) {
+    return codeColor.getColorNames(codes);
   }
 
   @Override
-  public ProductUserAndAdminResponse getByProductId(Long subProductId, String color) {
-    subProductRepository.findById(subProductId).orElseThrow(
+  public AllInformationProduct getAllProductInformation(Long subProductId) {
+    return productTemplate.getAllProductInformation(subProductId);
+  }
+
+  @Override
+  public List<ProductDetailsResponse> getDetails(Long productId) {
+    productRepository.findById(productId).orElseThrow(() -> {
+      log.error("Product with id: " + productId + " is not found");
+      return new NotFoundException("Product with id: " + productId + " is not found");
+    });
+    return productTemplate.getDetails(productId);
+  }
+
+  @Override
+  public ProductUserAndAdminResponse getByProductId(Long productId, String color) {
+    productRepository.findById(productId).orElseThrow(
         () -> {
-          log.error("SubProduct with id: " + subProductId + " is not found");
-          return new NotFoundException("SubProduct with id: " + subProductId + " is not found");
+          log.error("Product with id: " + productId + " is not found");
+          return new NotFoundException("Product with id: " + productId + " is not found");
         });
-    return productTemplate.getByProductId(subProductId,color);
+    return productTemplate.getByProductId(productId,color);
   }
 }

@@ -1,16 +1,12 @@
 package peaksoft.house.gadgetariumb9.template;
 
-import java.time.LocalDate;
-import java.util.List;
 import peaksoft.house.gadgetariumb9.dto.request.subProduct.SubProductCatalogRequest;
+import peaksoft.house.gadgetariumb9.dto.response.compare.LatestComparison;
+import peaksoft.house.gadgetariumb9.dto.response.subProduct.*;
+import java.time.LocalDate;
 import peaksoft.house.gadgetariumb9.dto.response.compare.CompareProductResponse;
 import peaksoft.house.gadgetariumb9.dto.response.compare.ComparisonCountResponse;
-import peaksoft.house.gadgetariumb9.dto.response.compare.LatestComparison;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.InfographicsResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.MainPagePaginationResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductHistoryResponse;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductPagination;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductPaginationCatalogAdminResponse;
+import java.util.List;
 
 public interface SubProductTemplate {
 
@@ -28,4 +24,6 @@ public interface SubProductTemplate {
   SubProductPaginationCatalogAdminResponse getGetAllSubProductAdmin(String productType, LocalDate startDate, LocalDate endDate, int pageSize, int pageNumber);
 
   List<LatestComparison> getLatestComparison();
+
+  List<CountColorResponse> getCountColor ( Long categoryId);
 }

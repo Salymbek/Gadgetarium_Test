@@ -13,17 +13,23 @@ public class AdminSearchResponse {
 
   private Long productId;
 
-  private String images;
+  private Long subProductId;
+
+  private String image;
 
   private int articleNumber;
 
   private String name;
 
-  private LocalDate dataOfIssue;
+  private LocalDate createdAt;
 
   private int quantity;
 
-  private String priceAndSale;
+  private BigDecimal price;
+
+  private int sale;
 
   private BigDecimal currentPrice;
+
+  private double rating;
 }

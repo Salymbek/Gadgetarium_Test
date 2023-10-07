@@ -44,5 +44,5 @@ public interface SubProductService {
 
   List<LatestComparison> getLatestComparison();
 
-
+  List<CountColorResponse> getCountColor (Long categoryId);
 }

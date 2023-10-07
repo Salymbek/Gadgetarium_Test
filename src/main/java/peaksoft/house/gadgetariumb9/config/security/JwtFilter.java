@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
 import peaksoft.house.gadgetariumb9.models.User;
 import peaksoft.house.gadgetariumb9.repositories.UserRepository;
+
 import java.io.IOException;
 
 @Component
@@ -50,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
           }
 
           String finalUsername = username;
-          User user = userRepository.getUserByEmail(username)
+          User user = userRepository.getUserByEmail(finalUsername)
               .orElseThrow(() ->
                   new NotFoundException("User with email: %s not found".formatted(finalUsername)));
           SecurityContextHolder.getContext()
@@ -62,7 +63,7 @@ public class JwtFilter extends OncePerRequestFilter {
                   ));
         } catch (JWTVerificationException e) {
           response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-              "Invalid token");
+              e.getMessage());
         }
       }
     }

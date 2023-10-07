@@ -1,19 +1,20 @@
 package peaksoft.house.gadgetariumb9.dto.response.basket;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.math.BigDecimal;
 
 @Builder
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class BasketResponse {
   private Long subProductId;
 
   private String image;
+
+  private String color;
 
   private String title;
 
@@ -28,5 +29,9 @@ public class BasketResponse {
   private BigDecimal price;
 
   private int theNumberOfOrders;
+
+  private boolean isFavorite;
+
+  private boolean isComparison;
 
 }

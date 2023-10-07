@@ -10,6 +10,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class SubProductMainPageResponse {
 
+  private Long productId;
+
   private Long subProductId;
 
   private String name;
@@ -39,4 +41,7 @@ public class SubProductMainPageResponse {
   private boolean isFavorite;
 
   private boolean isComparison;
+
+  private boolean inBasket;
+
 }

@@ -26,7 +26,7 @@ import peaksoft.house.gadgetariumb9.services.AuthenticationService;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthenticationServiceImpl implements AuthenticationService {
+public class  AuthenticationServiceImpl implements AuthenticationService {
 
   private final UserRepository userRepository;
 
@@ -54,6 +54,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       log.error("User with email: %s already exist".formatted(signUpRequest.getEmail()));
       throw new AlreadyExistException(
           "User with email: %s already exist".formatted(signUpRequest.getEmail()));
+    }
+    if (userRepository.existsByPhoneNumber(signUpRequest.getPhoneNumber())){
+      log.error("User with phone number: %s already exist".formatted(signUpRequest.getPhoneNumber()));
+      throw new AlreadyExistException(
+          "User with phone number: %s already exist".formatted(signUpRequest.getPhoneNumber()));
     }
     User user = User
         .builder()

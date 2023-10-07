@@ -3,6 +3,7 @@ package peaksoft.house.gadgetariumb9.apis;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.PermitAll;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,13 +13,18 @@ import peaksoft.house.gadgetariumb9.dto.request.subProduct.SubProductCatalogRequ
 import peaksoft.house.gadgetariumb9.dto.response.compare.CompareProductResponse;
 import peaksoft.house.gadgetariumb9.dto.response.compare.ComparisonCountResponse;
 import peaksoft.house.gadgetariumb9.dto.response.compare.LatestComparison;
+import peaksoft.house.gadgetariumb9.dto.response.product.AllInformationProduct;
+import peaksoft.house.gadgetariumb9.dto.response.product.ProductDetailsResponse;
 import peaksoft.house.gadgetariumb9.dto.response.product.ProductUserAndAdminResponse;
 import peaksoft.house.gadgetariumb9.dto.response.subProduct.*;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
+import peaksoft.house.gadgetariumb9.services.PdfFileService;
 import peaksoft.house.gadgetariumb9.services.ProductService;
 import peaksoft.house.gadgetariumb9.services.SubProductService;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +34,7 @@ public class ProductApi {
 
   private final ProductService productService;
   private final SubProductService subProductService;
+  private final PdfFileService pdfFileService;
 
   @PreAuthorize("hasAuthority('ADMIN')")
   @Operation(summary = "save Product", description = "Creating a new product")
@@ -37,10 +44,17 @@ public class ProductApi {
   }
 
   @GetMapping("/colors/{name}")
-  @PreAuthorize("hasAnyAuthority('ADMIN')")
+  @PermitAll
   @Operation(summary = "Get color", description = "Get the right colors")
   public List<String> getColors(@PathVariable String name) {
     return productService.getColor(name);
+  }
+
+  @GetMapping("/colors")
+  @PermitAll
+  @Operation(summary = "Get color", description = "Get the right colors")
+  public Map<String,String> getColoursNames(@RequestParam List<String> names) {
+    return productService.getColorNames(names);
   }
 
   @GetMapping("/new")
@@ -76,7 +90,7 @@ public class ProductApi {
     return subProductService.getSubProductCatalogs(subProductCatalogRequest, pageSize, pageNumber);
   }
 
-  @GetMapping("/get-product/{sub-product-id}")
+  @PostMapping("/get-product/{sub-product-id}")
   @Operation(summary = "Get sub product", description = "Get sub product by id id")
   @PreAuthorize("hasAuthority('USER')")
   public void getSubProductId(@PathVariable("sub-product-id") Long productId) {
@@ -131,10 +145,10 @@ public class ProductApi {
 
   @GetMapping("/get-by-id")
   @PermitAll
-  @Operation(summary = "To get by subProduct id the product.", description = "This method to get by subProduct id the product.")
-  public ProductUserAndAdminResponse getByProductId(@RequestParam Long subProductId,
+  @Operation(summary = "To get by product id and color the product.", description = "This method to get by color and id the product.")
+  public ProductUserAndAdminResponse getByProductId(@RequestParam Long productId,
       @RequestParam(defaultValue = "", required = false) String colour) {
-    return productService.getByProductId(subProductId, colour);
+    return productService.getByProductId(productId, colour);
   }
 
   @GetMapping("/count/comparison")
@@ -167,6 +181,13 @@ public class ProductApi {
     return subProductService.clearUserCompare(subProductIds);
   }
 
+  @GetMapping("downloadPdf/{sub-product-id}")
+  @PermitAll
+  @Operation(summary = "Get PDF file", description = "This method is to download a pdf file to a sub-product")
+  public void pdfFile(@PathVariable("sub-product-id") Long subProductId, HttpServletResponse response) throws IOException  {
+    pdfFileService.generatePdf(subProductId,response);
+  }
+
   @GetMapping("/get-latest-comparison")
   @PreAuthorize("hasAuthority('USER')")
   @Operation(summary = "Get Latest Comparison", description = "Retrieve the latest product comparisons for the authorized user.")
@@ -174,4 +195,25 @@ public class ProductApi {
     return subProductService.getLatestComparison();
   }
 
+  @GetMapping("/count-color")
+  @PermitAll
+  @Operation(summary = "Product counter by color", description = "Get count of products with color")
+  public List<CountColorResponse> getCountColor (@RequestParam Long categoryId){
+    return subProductService.getCountColor( categoryId);
+  }
+
+  @GetMapping("/all-information")
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @Operation(summary = "Retrieve All Information for a Product",
+      description = "This endpoint allows an administrator to retrieve all information related to a product by specifying its unique supplier product ID.")
+  public AllInformationProduct allInformationProduct (@RequestParam Long supProductId){
+    return productService.getAllProductInformation(supProductId);
+  }
+
+  @GetMapping("/product-details")
+  @PreAuthorize("hasAuthority('ADMIN')")
+  @Operation(summary = "Get product details", description = "Getting product's details with subProduct id")
+  public List<ProductDetailsResponse> getDetails (@RequestParam Long productId){
+    return productService.getDetails(productId);
+  }
 }

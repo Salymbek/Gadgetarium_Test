@@ -16,6 +16,7 @@ import peaksoft.house.gadgetariumb9.repositories.BasketRepository;
 import peaksoft.house.gadgetariumb9.repositories.SubProductRepository;
 import peaksoft.house.gadgetariumb9.services.BasketService;
 import peaksoft.house.gadgetariumb9.template.BasketTemplate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -32,10 +33,10 @@ public class BasketServiceImpl implements BasketService {
 
   private final SubProductRepository subProductRepository;
 
-
   @Override
   public SimpleResponse saveBasket(Long subProductId) {
     User user = jwtService.getAuthenticationUser();
+
     SubProduct subProduct = subProductRepository.findById(subProductId).orElseThrow(() -> {
       log.error("Sub product with id: %s not found".formatted(subProductId));
       return new NotFoundException("Sub product with id: %s not found".formatted(subProductId));
@@ -62,16 +63,26 @@ public class BasketServiceImpl implements BasketService {
   @Override
   public SimpleResponse deleteProductByIds(List<Long> subProductIds) {
     User user = jwtService.getAuthenticationUser();
-    if (basketRepository.getBasketByUserId(user.getId()) == null || basketRepository.getBasketByUserId(user.getId()).isEmpty()) {
+    List<Basket> baskets = basketRepository.getBasketByUserId(user.getId());
+    if (baskets == null || baskets.isEmpty()) {
       throw new NotFoundException("Baskets not found");
     }
-    basketRepository.deleteAll(basketRepository.getBasketByUserId(user.getId()));
-    return SimpleResponse
-        .builder()
+    List<Basket> basketsToDelete = new ArrayList<>();
+    for (Basket basket : baskets) {
+      for (SubProduct subProduct : basket.getSubProducts()) {
+        if (subProductIds.contains(subProduct.getId())) {
+          basketsToDelete.add(basket);
+          break;
+        }
+      }
+    }
+    basketRepository.deleteAll(basketsToDelete);
+    return SimpleResponse.builder()
         .message("Sub product deleted")
         .status(HttpStatus.OK)
         .build();
   }
+
 
   @Override
   public SimpleResponse deleteProductById(Long supProductId) {
@@ -85,5 +96,30 @@ public class BasketServiceImpl implements BasketService {
         .status(HttpStatus.OK)
         .build();
   }
+
+  @Override
+  public SimpleResponse addSubProductForBasket(Long subProductId, int quantity) {
+    User user = jwtService.getAuthenticationUser();
+    List<SubProduct> subProducts = new ArrayList<>(quantity);
+    for (int i = 0; i < quantity; i++) {
+      SubProduct subProduct = subProductRepository.findById(subProductId)
+          .orElseThrow(() -> new NotFoundException("Sub product with id: %s not found".formatted(subProductId)));
+      subProducts.add(subProduct);
+    }
+
+    Basket basket = Basket.builder()
+        .subProducts(subProducts)
+        .user(user)
+        .build();
+
+    basketRepository.save(basket);
+    log.info("Sub products added for basket");
+
+    return SimpleResponse.builder()
+        .message("Sub products added for basket")
+        .status(HttpStatus.OK)
+        .build();
+  }
+
 
 }

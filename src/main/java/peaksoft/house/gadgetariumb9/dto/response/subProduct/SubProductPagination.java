@@ -2,7 +2,6 @@ package peaksoft.house.gadgetariumb9.dto.response.subProduct;
 
 import lombok.*;
 import java.util.List;
-import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductCatalogResponse;
 
 @Getter
 @Setter
@@ -10,6 +9,8 @@ import peaksoft.house.gadgetariumb9.dto.response.subProduct.SubProductCatalogRes
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubProductPagination {
+
+  private int quantity;
 
   private List<SubProductCatalogResponse> responseList;
 

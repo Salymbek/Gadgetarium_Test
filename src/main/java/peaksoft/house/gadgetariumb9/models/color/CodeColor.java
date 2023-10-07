@@ -2,7 +2,10 @@ package peaksoft.house.gadgetariumb9.models.color;
 
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -106,7 +109,15 @@ public class CodeColor {
     colors.put("#894465", "Violet");
   }
 
-  public String ColorName(String code) {
-    return colors.getOrDefault(code, "Unknown");
+  public List<String> ColorName(String code) {
+    return Collections.singletonList(colors.getOrDefault(code.toUpperCase(), "Unknown"));
+  }
+
+  public Map<String, String> getColorNames(List<String> codes) {
+    Map<String, String> colorNames = new HashMap<>();
+    for (String code : codes) {
+      colorNames.put(code.toUpperCase(), ColorName(code.toUpperCase()).get(0));
+    }
+    return colorNames;
   }
 }

@@ -6,13 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import peaksoft.house.gadgetariumb9.config.security.JwtService;
-import peaksoft.house.gadgetariumb9.dto.request.review.AnswerRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewRequest;
 import peaksoft.house.gadgetariumb9.dto.request.review.ReviewUserRequest;
+import peaksoft.house.gadgetariumb9.dto.request.review.ViewReviewRequest;
+import peaksoft.house.gadgetariumb9.dto.response.review.AdminReviewPagination;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewGradeInfo;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewPagination;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewRatingResponse;
 import peaksoft.house.gadgetariumb9.dto.response.review.ReviewUserResponse;
+import peaksoft.house.gadgetariumb9.dto.response.review.ReviewsRatings;
 import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.exceptions.AlreadyExistException;
 import peaksoft.house.gadgetariumb9.exceptions.BadCredentialException;
@@ -46,7 +48,7 @@ public class ReviewServiceImpl implements ReviewService {
 
   @Override
   public ReviewRatingResponse countReviewsRating(Long subProductId) {
-    reviewRepository.findById(subProductId).orElseThrow(() -> {
+    subProductRepository.findById(subProductId).orElseThrow(() -> {
       log.error("SubProductId not found");
       return new NotFoundException("Review with subProductId: " + subProductId + " not found");
     });
@@ -107,6 +109,7 @@ public class ReviewServiceImpl implements ReviewService {
         .grade(reviewRequest.getGrade())
         .dateCreatAd(ZonedDateTime.now())
         .imageLink(reviewRequest.getImageLink())
+        .isViewed(false)
         .user(user)
         .build();
 
@@ -118,7 +121,8 @@ public class ReviewServiceImpl implements ReviewService {
       log.error("You must buy this product if you want to leave a review");
       throw new BadCredentialException("You must buy this product if you want to leave a review");
     }
-
+    subProduct.setRating(countReviewsRating(subProduct.getId()).getRating());
+    subProductRepository.save(subProduct);
     return SimpleResponse.builder()
         .status(HttpStatus.OK)
         .message("Review successfully save !")
@@ -165,28 +169,20 @@ public class ReviewServiceImpl implements ReviewService {
   }
 
   @Override
-  public SimpleResponse replyToComment(AnswerRequest answerRequest) {
-    Review review = reviewRepository.findById(answerRequest.getReviewId()).orElseThrow(() -> {
-      log.error(String.format("Review with id: %s not found!", answerRequest.getReviewId()));
+  public SimpleResponse replyToComment(Long reviewId, String answer) {
+    Review review = reviewRepository.findById(reviewId).orElseThrow(() -> {
+      log.error(String.format("Review with id: %s not found!", reviewId));
       return new NotFoundException(
-          String.format("Review with id: %s not found!", answerRequest.getReviewId()));
+          String.format("Review with id: %s not found!", reviewId));
     });
 
-    if (review.getReplyToComment() == null) {
-      review.setReplyToComment(answerRequest.getReplyToComment());
-      reviewRepository.save(review);
-      log.info("Reply to comment successfully save!");
-      return SimpleResponse.builder()
-          .status(HttpStatus.OK)
-          .message("Reply to comment successfully saved!")
-          .build();
-    } else {
-      log.info("Review with id: " + answerRequest.getReviewId() + " has already been answered!");
-      return SimpleResponse.builder()
-          .status(HttpStatus.FOUND)
-          .message("The review has already been answered!")
-          .build();
-    }
+    review.setReplyToComment(answer);
+    reviewRepository.save(review);
+    log.info("Reply to comment successfully save!");
+    return SimpleResponse.builder()
+        .status(HttpStatus.OK)
+        .message("Reply to comment successfully saved!")
+        .build();
   }
 
   @Override
@@ -196,8 +192,7 @@ public class ReviewServiceImpl implements ReviewService {
           log.error(String.format("Review with id %s not found", reviewId));
           return new NotFoundException(String.format("Отзыв с id: %s не найден", reviewId));
         });
-
-    if (!review.getReplyToComment().isEmpty()) {
+    if (review.getReplyToComment() != null) {
       if (!text.isBlank()) {
         review.setReplyToComment(text);
         reviewRepository.save(review);
@@ -213,7 +208,7 @@ public class ReviewServiceImpl implements ReviewService {
     } else {
       return SimpleResponse.builder()
           .status(HttpStatus.BAD_REQUEST)
-          .message("Сomment has no response!")
+          .message("Comment has no response!")
           .build();
     }
   }
@@ -273,5 +268,32 @@ public class ReviewServiceImpl implements ReviewService {
       log.error("Access denied. You are not the owner of this review!");
       return new ReviewUserResponse(user.getEmail(),"Access denied. You are not the owner of this review!");
     }
+  }
+
+  @Override
+  public AdminReviewPagination getAllReviewsForAdmin(String filter, int pageSize, int pageNumber) {
+    return reviewTemplate.getAllReviewsForAdmin(filter, pageSize, pageNumber);
+  }
+
+  @Override
+  public ReviewsRatings getAllRatings() {
+    return reviewTemplate.getAllRatings();
+  }
+
+  @Override
+  public SimpleResponse updateView(ViewReviewRequest request) {
+
+    Review review = reviewRepository.findById(request.getReviewId()).orElseThrow(() -> {
+      log.error(String.format("Review with id %s not found", request.getReviewId()));
+      return new NotFoundException(String.format("Review with id %s not found", request.getReviewId()));
+    });
+
+    review.setViewed(request.isView());
+    reviewRepository.save(review);
+
+    return SimpleResponse.builder()
+        .status(HttpStatus.OK)
+        .message("Review's view with id: "+request.getReviewId()+" successfully updated!")
+        .build();
   }
 }

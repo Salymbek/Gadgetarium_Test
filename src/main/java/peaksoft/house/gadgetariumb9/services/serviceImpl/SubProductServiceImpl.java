@@ -16,6 +16,7 @@ import peaksoft.house.gadgetariumb9.dto.simple.SimpleResponse;
 import peaksoft.house.gadgetariumb9.exceptions.BadRequestException;
 import peaksoft.house.gadgetariumb9.exceptions.NotFoundException;
 import peaksoft.house.gadgetariumb9.models.Category;
+import peaksoft.house.gadgetariumb9.models.Review;
 import peaksoft.house.gadgetariumb9.models.SubProduct;
 import peaksoft.house.gadgetariumb9.models.User;
 import peaksoft.house.gadgetariumb9.repositories.*;
@@ -53,6 +54,8 @@ public class SubProductServiceImpl implements SubProductService {
 
   private final MainPageProducts mainPageProducts;
 
+  private final UtilitiesServiceImpl utilitiesService;
+
   @Override
   public SubProductPagination getSubProductCatalogs(
       SubProductCatalogRequest subProductCatalogRequest, int pageSize, int pageNumber) {
@@ -82,9 +85,13 @@ public class SubProductServiceImpl implements SubProductService {
 
   public void addRecentlyViewedProduct(Long productId) {
     User user = jwtService.getAuthenticationUser();
-    user.getRecentlyViewedProducts().add(productId);
-    log.info("Product added recently viewed");
+    List<Long> recentlyViewedProducts = user.getRecentlyViewedProducts();
+    if (!recentlyViewedProducts.contains(productId)) {
+      recentlyViewedProducts.add(productId);
+      log.info("Product added recently viewed");
+    }
   }
+
 
   @Override
   public List<SubProductHistoryResponse> getRecentlyViewedProduct() {
@@ -98,18 +105,43 @@ public class SubProductServiceImpl implements SubProductService {
   }
 
   @Override
-  @Transactional
   public SimpleResponse singleDelete(Long subProductId) {
-    SubProduct subProduct = subProductRepository.findById(subProductId)
-        .orElseThrow(() -> {
-          log.error("SubProduct with id: " + subProductId + " is not found");
-          return new NotFoundException("SubProduct with id: " + subProductId + " is not found");
-        });
+    SubProduct subProduct = utilitiesService.getSubProduct(subProductId);
+    deleteSubProduct(subProduct);
 
+    return SimpleResponse.builder()
+        .status(HttpStatus.OK)
+        .message(String.format("SubProduct with id: %d is deleted", subProductId))
+        .build();
+  }
+
+  @Override
+  public SimpleResponse multiDelete(List<Long> subProductIds) {
+    for (Long id : subProductIds) {
+      SubProduct subProduct = subProductRepository.findById(id)
+          .orElseThrow(() -> {
+            log.error("SubProduct with id: " + id + " is not found");
+            return new NotFoundException("SubProduct with id: " + id + " is not found");
+          });
+
+      deleteSubProduct(subProduct);
+    }
+
+    return SimpleResponse.builder()
+        .status(HttpStatus.OK)
+        .message("SubProducts with given IDs are deleted")
+        .build();
+  }
+
+  private void deleteSubProduct(SubProduct subProduct) {
     subProduct.getBaskets().forEach(basket -> basket.getSubProducts().remove(subProduct));
     subProduct.getOrders().forEach(order -> order.getSubProducts().remove(subProduct));
-    subProduct.getReviews().remove(subProduct);
 
+    List<Review> reviews = subProduct.getReviews();
+    for (Review review : reviews) {
+      review.setSubProduct(null);
+    }
+    reviews.clear();
     if (subProduct.getDiscount() != null) {
       discountRepository.delete(subProduct.getDiscount());
     }
@@ -131,55 +163,8 @@ public class SubProductServiceImpl implements SubProductService {
     });
 
     subProductRepository.delete(subProduct);
-
-    return SimpleResponse.builder()
-        .status(HttpStatus.OK)
-        .message(String.format("SubProduct with id: %d is deleted", subProductId))
-        .build();
   }
 
-  @Override
-  @Transactional
-  public SimpleResponse multiDelete(List<Long> subProductIds) {
-    for (Long id : subProductIds) {
-      SubProduct subProduct = subProductRepository.findById(id)
-          .orElseThrow(() -> {
-            log.error("SubProduct with id: " + id + " is not found");
-            return new NotFoundException("SubProduct with id: " + id + " is not found");
-          });
-
-      subProduct.getBaskets().forEach(basket -> basket.getSubProducts().remove(subProduct));
-      subProduct.getOrders().forEach(order -> order.getSubProducts().remove(subProduct));
-      subProduct.getReviews().remove(subProduct);
-
-      if (subProduct.getDiscount() != null) {
-        discountRepository.delete(subProduct.getDiscount());
-      }
-      if (subProduct.getLaptop() != null) {
-        laptopRepository.delete(subProduct.getLaptop());
-      }
-      if (subProduct.getPhone() != null) {
-        phoneRepository.delete(subProduct.getPhone());
-      }
-      if (subProduct.getSmartWatch() != null) {
-        smartWatchRepository.delete(subProduct.getSmartWatch());
-      }
-
-      userRepository.findAll().forEach(user -> {
-        List<Long> favorites = user.getFavorite();
-        if (favorites != null) {
-          favorites.remove(subProduct.getId());
-        }
-      });
-
-      subProductRepository.deleteById(subProduct.getId());
-    }
-
-    return SimpleResponse.builder()
-        .status(HttpStatus.OK)
-        .message("SubProducts with given IDs are deleted")
-        .build();
-  }
 
   @Override
   public SimpleResponse updateSubProduct(Long subProductId, ProductRequest productRequest) {
@@ -235,20 +220,6 @@ public class SubProductServiceImpl implements SubProductService {
               throw new BadRequestException("Invalid or unchanged screen resolution value provided.");
             }
 
-            if (x.getRom() != 0 && oldSubProduct.getRom() != x.getRom()) {
-              oldSubProduct.setRom(x.getRom());
-            } else {
-              log.error("Invalid or unchanged ROM value provided.");
-              throw new BadRequestException("Invalid or unchanged ROM value provided.");
-            }
-
-            if (x.getAdditionalFeatures() != null && !x.getAdditionalFeatures().equals(oldSubProduct.getAdditionalFeatures())) {
-              oldSubProduct.setAdditionalFeatures(x.getAdditionalFeatures());
-            } else {
-              log.error("Invalid or unchanged additional features provided.");
-              throw new BadRequestException("Invalid or unchanged additional features provided.");
-            }
-
             if (x.getPrice() != null && !x.getPrice().equals(oldSubProduct.getPrice())) {
               oldSubProduct.setPrice(x.getPrice());
             } else {
@@ -280,7 +251,7 @@ public class SubProductServiceImpl implements SubProductService {
           });
         }
       }
-      case "SmartWatch" -> {
+      case "Smart Watch" -> {
         if (Objects.equals(oldSubProduct.getId(), subProductId)) {
           productRequest.getSubProductRequests().forEach(x -> {
             if (x.getAnInterface() != null && !x.getAnInterface().equals(oldSubProduct.getSmartWatch().getAnInterface())) {
@@ -327,13 +298,6 @@ public class SubProductServiceImpl implements SubProductService {
 
             oldSubProduct.getSmartWatch().setWaterproof(x.isWaterproof());
 
-            if (x.getRam() != 0 && oldSubProduct.getRam() != x.getRam()) {
-              oldSubProduct.setRam(x.getRam());
-            } else {
-              log.error("Invalid or unchanged RAM value provided.");
-              throw new BadRequestException("Invalid or unchanged RAM value provided.");
-            }
-
             if (x.getScreenResolution() != null && !x.getScreenResolution().equals(oldSubProduct.getScreenResolution())) {
               oldSubProduct.setScreenResolution(x.getScreenResolution());
             } else {
@@ -346,13 +310,6 @@ public class SubProductServiceImpl implements SubProductService {
             } else {
               log.error("Invalid or unchanged ROM value provided.");
               throw new BadRequestException("Invalid or unchanged ROM value provided.");
-            }
-
-            if (x.getAdditionalFeatures() != null && !x.getAdditionalFeatures().equals(oldSubProduct.getAdditionalFeatures())) {
-              oldSubProduct.setAdditionalFeatures(x.getAdditionalFeatures());
-            } else {
-              log.error("Invalid or unchanged additional features provided.");
-              throw new BadRequestException("Invalid or unchanged additional features provided.");
             }
 
             if (x.getPrice() != null && !x.getPrice().equals(oldSubProduct.getPrice())) {
@@ -385,7 +342,7 @@ public class SubProductServiceImpl implements SubProductService {
           });
         }
       }
-      case "Smartphone" -> {
+      case "Phone" -> {
         if (Objects.equals(oldSubProduct.getId(), subProductId)) {
           productRequest.getSubProductRequests().forEach(x -> {
 
@@ -396,27 +353,6 @@ public class SubProductServiceImpl implements SubProductService {
               throw new BadRequestException("Invalid or unchanged SIM value provided.");
             }
 
-            if (x.getScreenSize() != 0 && oldSubProduct.getPhone().getScreenSize() != x.getScreenSize()) {
-              oldSubProduct.getPhone().setScreenSize(x.getScreenSize());
-            } else {
-              log.error("Invalid or unchanged screen size value provided.");
-              throw new BadRequestException("Invalid or unchanged screen size value provided.");
-            }
-
-            if (x.getBatteryCapacity() != null && !x.getBatteryCapacity().equals(oldSubProduct.getPhone().getBatteryCapacity())) {
-              oldSubProduct.getPhone().setBatteryCapacity(x.getBatteryCapacity());
-            } else {
-              log.error("Invalid or unchanged battery capacity value provided.");
-              throw new BadRequestException("Invalid or unchanged battery capacity value provided.");
-            }
-
-            if (x.getDiagonalScreen() != null && !x.getDiagonalScreen().equals(oldSubProduct.getPhone().getDiagonalScreen())) {
-              oldSubProduct.getPhone().setDiagonalScreen(x.getDiagonalScreen());
-            } else {
-              log.error("Invalid or unchanged diagonal screen value provided.");
-              throw new BadRequestException("Invalid or unchanged diagonal screen value provided.");
-            }
-
             if (x.getRam() != 0 && oldSubProduct.getRam() != x.getRam()) {
               oldSubProduct.setRam(x.getRam());
             } else {
@@ -424,25 +360,11 @@ public class SubProductServiceImpl implements SubProductService {
               throw new BadRequestException("Invalid or unchanged RAM value provided.");
             }
 
-            if (x.getScreenResolution() != null && !x.getScreenResolution().equals(oldSubProduct.getScreenResolution())) {
-              oldSubProduct.setScreenResolution(x.getScreenResolution());
-            } else {
-              log.error("Invalid or unchanged screen resolution value provided.");
-              throw new BadRequestException("Invalid or unchanged screen resolution value provided.");
-            }
-
             if (x.getRom() != 0 && oldSubProduct.getRom() != x.getRom()) {
               oldSubProduct.setRom(x.getRom());
             } else {
               log.error("Invalid or unchanged ROM value provided.");
               throw new BadRequestException("Invalid or unchanged ROM value provided.");
-            }
-
-            if (x.getAdditionalFeatures() != null && !x.getAdditionalFeatures().equals(oldSubProduct.getAdditionalFeatures())) {
-              oldSubProduct.setAdditionalFeatures(x.getAdditionalFeatures());
-            } else {
-              log.error("Invalid or unchanged additional features provided.");
-              throw new BadRequestException("Invalid or unchanged additional features provided.");
             }
 
             if (x.getPrice() != null && !x.getPrice().equals(oldSubProduct.getPrice())) {
@@ -467,6 +389,99 @@ public class SubProductServiceImpl implements SubProductService {
             }
 
             if (x.getImages() != null && !x.getImages().equals(oldSubProduct.getImages())) {
+              oldSubProduct.setImages(x.getImages());
+            } else {
+              log.error("Invalid or unchanged images provided.");
+              throw new BadRequestException("Invalid or unchanged images provided.");
+            }
+          });
+        }
+      }
+      case "Tablet" -> {
+        if (Objects.equals(oldSubProduct.getId(), subProductId)) {
+          productRequest.getSubProductRequests().forEach(x -> {
+
+            if (x.getScreenSize() != 0
+                && oldSubProduct.getPhone().getScreenSize() != x.getScreenSize()) {
+              oldSubProduct.getPhone().setScreenSize(x.getScreenSize());
+            } else {
+              log.error("Invalid or unchanged screen size value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged screen size value provided.");
+            }
+
+            if (x.getBatteryCapacity() != null && !x.getBatteryCapacity()
+                .equals(oldSubProduct.getPhone().getBatteryCapacity())) {
+              oldSubProduct.getPhone().setBatteryCapacity(x.getBatteryCapacity());
+            } else {
+              log.error("Invalid or unchanged battery capacity value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged battery capacity value provided.");
+            }
+
+            if (x.getDiagonalScreen() != null && !x.getDiagonalScreen()
+                .equals(oldSubProduct.getPhone().getDiagonalScreen())) {
+              oldSubProduct.getPhone().setDiagonalScreen(x.getDiagonalScreen());
+            } else {
+              log.error("Invalid or unchanged diagonal screen value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged diagonal screen value provided.");
+            }
+
+            if (x.getRam() != 0 && oldSubProduct.getRam() != x.getRam()) {
+              oldSubProduct.setRam(x.getRam());
+            } else {
+              log.error("Invalid or unchanged RAM value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged RAM value provided.");
+            }
+
+            if (x.getScreenResolution() != null && !x.getScreenResolution()
+                .equals(oldSubProduct.getScreenResolution())) {
+              oldSubProduct.setScreenResolution(x.getScreenResolution());
+            } else {
+              log.error("Invalid or unchanged screen resolution value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged screen resolution value provided.");
+            }
+
+            if (x.getRom() != 0 && oldSubProduct.getRom() != x.getRom()) {
+              oldSubProduct.setRom(x.getRom());
+            } else {
+              log.error("Invalid or unchanged ROM value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged ROM value provided.");
+            }
+
+            if (x.getPrice() != null && !x.getPrice()
+                .equals(oldSubProduct.getPrice())) {
+              oldSubProduct.setPrice(x.getPrice());
+            } else {
+              log.error("Invalid or unchanged price value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged price value provided.");
+            }
+
+            if (x.getQuantity() != 0
+                && oldSubProduct.getQuantity() != x.getQuantity()) {
+              oldSubProduct.setQuantity(x.getQuantity());
+            } else {
+              log.error("Invalid or unchanged quantity value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged quantity value provided.");
+            }
+
+            if (x.getCodeColor() != null && !x.getCodeColor()
+                .equals(oldSubProduct.getCodeColor())) {
+              oldSubProduct.setCodeColor(x.getCodeColor());
+            } else {
+              log.error("Invalid or unchanged code color value provided.");
+              throw new BadRequestException(
+                  "Invalid or unchanged code color value provided.");
+            }
+
+            if (x.getImages() != null && !x.getImages()
+                .equals(oldSubProduct.getImages())) {
               oldSubProduct.setImages(x.getImages());
             } else {
               log.error("Invalid or unchanged images provided.");
@@ -497,7 +512,6 @@ public class SubProductServiceImpl implements SubProductService {
   }
 
   @Override
-  @Transactional
   public SimpleResponse comparisonAddOrDelete(Long id, boolean addOrDelete) {
     SubProduct subProduct = subProductRepository.findById(id).orElseThrow(() -> new NotFoundException("This product ID: " + id + " not found!"));
     User user = jwtService.getAuthenticationUser();
@@ -534,4 +548,8 @@ public class SubProductServiceImpl implements SubProductService {
     return subProductTemplate.getLatestComparison();
   }
 
+  @Override
+  public List<CountColorResponse> getCountColor(Long categoryId) {
+    return subProductTemplate.getCountColor(categoryId);
+  }
 }

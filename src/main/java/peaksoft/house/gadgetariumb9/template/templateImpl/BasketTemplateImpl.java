@@ -9,7 +9,9 @@ import peaksoft.house.gadgetariumb9.config.security.JwtService;
 import peaksoft.house.gadgetariumb9.dto.response.basket.BasketInfographicResponse;
 import peaksoft.house.gadgetariumb9.dto.response.basket.BasketResponse;
 import peaksoft.house.gadgetariumb9.models.User;
+import peaksoft.house.gadgetariumb9.services.UtilitiesService;
 import peaksoft.house.gadgetariumb9.template.BasketTemplate;
+
 import java.util.List;
 
 @Slf4j
@@ -22,40 +24,42 @@ public class BasketTemplateImpl implements BasketTemplate {
 
   private final JwtService jwtService;
 
+  private final UtilitiesService utilitiesService;
+
+
   @Override
   public List<BasketResponse> getAllByProductsFromTheBasket() {
     User user = jwtService.getAuthenticationUser();
     String sql = """
-                 SELECT sp.id,
-                        (SELECT spi.images
-                         FROM sub_product_images spi
-                         WHERE spi.sub_product_id = sp.id
-                         LIMIT 1) AS image,
-                        p.name,
-                        sp.rating,
-                        COALESCE((SELECT COUNT(DISTINCT r.id) FROM reviews r WHERE r.sub_product_id = sp.id), 0) AS number_of_reviews,
-                        sp.quantity,
-                        sp.article_number,
-                        SUM(sp.price) AS total_price,
-                        COUNT(sp.id) AS the_number_of_orders
+                SELECT sp.id,
+                       (SELECT spi.images
+                       FROM sub_product_images spi
+                       WHERE spi.sub_product_id = sp.id
+                       LIMIT 1) AS image,
+                       sp.code_color AS color,
+                       p.name,
+                       sp.rating,
+                       COALESCE((SELECT COUNT(DISTINCT r.id) FROM reviews r WHERE r.sub_product_id = sp.id), 0) AS number_of_reviews,
+                       sp.quantity,
+                       sp.article_number,
+                       SUM(sp.price) AS total_price,
+                       (SELECT COUNT(*) FROM baskets_sub_products bsp JOIN baskets b on b.id = bsp.baskets_id WHERE bsp.sub_products_id = sp.id AND b.user_id = ?) AS the_number_of_orders
                 FROM sub_products sp
-                         JOIN baskets_sub_products bsp ON sp.id = bsp.sub_products_id
-                         JOIN baskets b ON bsp.baskets_id = b.id
-                         JOIN products p ON sp.product_id = p.id
-                         JOIN reviews r ON sp.id = r.sub_product_id
-                         JOIN users u ON b.user_id = u.id
-                WHERE u.id = ?
+                    JOIN products p ON sp.product_id = p.id
+                    LEFT JOIN reviews r ON sp.id = r.sub_product_id
+                WHERE sp.id IN (SELECT sub_products_id FROM baskets_sub_products WHERE baskets_id IN (SELECT id FROM baskets WHERE user_id = ?))
                 GROUP BY sp.id, p.name, (SELECT spi.images FROM sub_product_images spi WHERE spi.sub_product_id = sp.id LIMIT 1),
-                         sp.rating, sp.quantity, sp.
-                   article_number, sp.price;
-                   """;
-    return jdbcTemplate.query(
+                    sp.rating, sp.quantity, sp.article_number, sp.price, sp.quantity;
+                """;
+
+    List<BasketResponse> basketResponses = jdbcTemplate.query(
         sql,
         (rs, rowNum) ->
             BasketResponse
                 .builder()
                 .subProductId(rs.getLong("id"))
                 .image(rs.getString("image"))
+                .color(rs.getString("color"))
                 .title(rs.getString("name"))
                 .rating(rs.getInt("rating"))
                 .numberOfReviews(rs.getInt("number_of_reviews"))
@@ -64,25 +68,40 @@ public class BasketTemplateImpl implements BasketTemplate {
                 .price(rs.getBigDecimal("total_price"))
                 .theNumberOfOrders(rs.getInt("the_number_of_orders"))
                 .build(),
+        user.getId(),
         user.getId()
     );
+
+    List<Long> favorites = utilitiesService.getFavorites();
+
+    for (BasketResponse s : basketResponses) {
+      s.setFavorite(favorites.contains(s.getSubProductId()));
+    }
+
+    List<Long> comparisons = utilitiesService.getComparison();
+
+    for (BasketResponse s : basketResponses) {
+      s.setComparison(comparisons.contains(s.getSubProductId()));
+    }
+    return basketResponses;
   }
 
   @Override
   public BasketInfographicResponse getInfographic() {
     User user = jwtService.getAuthenticationUser();
     String sql = """             
-                   SELECT COUNT(bsp.sub_products_id)                            AS quantity,
-                       SUM(sp.price * COALESCE(d.sale, 100)) / 100              AS sale,
-                       SUM(sp.price)                                            AS price,
-                       SUM(sp.price - (sp.price * COALESCE(d.sale, 100)) / 100) AS total_sum
-                FROM baskets b
-                         JOIN users u ON b.user_id = u.id
-                         JOIN baskets_sub_products bsp ON b.id = bsp.baskets_id
-                         JOIN sub_products sp ON bsp.sub_products_id = sp.id
-                         LEFT JOIN discounts d ON sp.id = d.sub_product_id
-                WHERE u.id = ?
-                   """;
+                 SELECT
+                     COUNT(bsp.sub_products_id) AS quantity,
+                     SUM(COALESCE(sp.price * d.sale, sp.price * 0)) / 100 AS sale,
+                     SUM(sp.price) AS price,
+                     SUM(sp.price - COALESCE(sp.price * d.sale, sp.price * 0) / 100) AS total_sum
+                 FROM baskets b
+                          JOIN users u ON b.user_id = u.id
+                          JOIN baskets_sub_products bsp ON b.id = bsp.baskets_id
+                          JOIN sub_products sp ON bsp.sub_products_id = sp.id
+                          LEFT JOIN discounts d ON sp.id = d.sub_product_id
+                 WHERE u.id = ?;
+                """;
     BasketInfographicResponse basketInfographicResponse = jdbcTemplate.queryForObject(
         sql,
         (rs, rowNum) -> BasketInfographicResponse

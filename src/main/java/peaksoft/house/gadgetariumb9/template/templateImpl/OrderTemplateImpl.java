@@ -1,6 +1,7 @@
 package peaksoft.house.gadgetariumb9.template.templateImpl;
 
 import jakarta.transaction.Transactional;
+import java.sql.Types;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -75,6 +76,12 @@ public class OrderTemplateImpl implements OrderTemplate {
                         SELECT o.id, concat(u.first_name,' ',u.last_name) as full_name, o.order_number,o.quantity, o.total_price,type_delivery,status
                                FROM orders o join public.users u on u.id = o.user_id where o.status= 'CANCEL'
                         """;
+      } else if (status.equalsIgnoreCase("Получен")) {
+        sql += """
+                        SELECT o.id, concat(u.first_name,' ',u.last_name) as full_name, o.order_number,o.quantity, o.total_price,type_delivery,status
+                                                       FROM orders o join public.users u on u.id = o.user_id where o.status= 'RECEIVED'
+                        """;
+
       }
     } else {
       log.error("Order status is not correct");
@@ -111,11 +118,11 @@ public class OrderTemplateImpl implements OrderTemplate {
   public OrderInfoResponse getOrderInfo(Long orderId) {
     String sql = """
                 SELECT    o.order_number,
-                o.id,
+                          o.id,
                           o.status,
                           u.phone_number,
-                          u.address  from orders o join user_favorite uf on o.user_id = uf.user_id join users u on u.id = o.user_id where o.id =? and o.status = 'DELIVERED'
-                """;
+                          u.address  from orders o left join users u on o.user_id = u.id where o.id = ?
+                          """;
     OrderInfoResponse orderInfoResponse = jdbcTemplate.query(sql,
         (rs, rowNum) ->
             OrderInfoResponse
@@ -127,33 +134,37 @@ public class OrderTemplateImpl implements OrderTemplate {
                 .address(rs.getString("address")), orderId).stream().findFirst().orElseThrow(() -> new NotFoundException("Order by id %s is not found.".formatted(orderId))).build();
     String sql2 = """
                     SELECT
-                        o.order_number,
-                        concat(p.name, ' ', b.name, ' ', sp.rom, ' ', sp.code_color) AS name,
-                        sp.quantity,
-                        o.total_price,
-                        o.total_discount,
-                        (o.total_discount * sp.price / 100) AS sumOfDiscount,
-                        COALESCE(SUM(sp.price * (1 - d.sale / 100.0)), 0) AS total
-                    FROM orders o
-                             JOIN orders_sub_products osp ON o.id = osp.orders_id
-                             JOIN sub_products sp ON sp.id = osp.sub_products_id
-                             JOIN products p ON p.id = sp.product_id
-                             JOIN brands b ON b.id = p.brand_id
-                             LEFT JOIN public.discounts d ON sp.id = d.sub_product_id where o.id = ?
-                    GROUP BY o.id, p.name, b.name, sp.rom, sp.code_color, sp.quantity, o.total_price, o.total_discount, sp.price
-                """;
-    List<OrderProductResponse> orderProductResponse = jdbcTemplate.query(sql2, (rs, i) ->
-        OrderProductResponse
-            .builder()
-            .orderNumber(rs.getInt("order_number"))
-            .name(rs.getString("name"))
-            .quantity(rs.getInt("quantity"))
-            .totalAmountOfOrder(rs.getBigDecimal("total_price"))
-            .sale(rs.getInt("total_discount"))
-            .sumOfDiscount(rs.getBigDecimal("sumOfDiscount"))
-            .total(rs.getBigDecimal("total")).build(), orderId
-    );
-    orderInfoResponse.setProductResponseList(orderProductResponse);
+                           o.order_number,
+                           (SELECT CONCAT(p.name, ' ', b.name, ' ', sp.rom, ' ', sp.code_color)
+                            FROM orders_sub_products osp
+                            JOIN sub_products sp ON sp.id = osp.sub_products_id
+                            JOIN products p ON p.id = sp.product_id
+                            WHERE osp.orders_id = o.id LIMIT 1) AS names,
+                           o.quantity,
+                           o.total_price,
+                           o.total_discount,
+                           (o.total_price - SUM(CAST(COALESCE(sp.price * (1 - CAST(d.sale AS DECIMAL) / 100), 0) AS DECIMAL))) AS sum_of_discount,
+                           SUM(CAST(COALESCE(sp.price * (1 - CAST(d.sale AS DECIMAL) / 100), 0) AS DECIMAL)) AS total
+                           FROM orders o
+                                JOIN orders_sub_products osp ON o.id = osp.orders_id
+                                JOIN sub_products sp ON sp.id = osp.sub_products_id
+                                JOIN products p ON p.id = sp.product_id
+                                JOIN brands b ON b.id = p.brand_id
+                                JOIN discounts d ON sp.id = d.sub_product_id
+                           WHERE o.id = ?
+                           GROUP BY o.id, o.order_number, o.quantity, o.total_price, o.total_discount, b.name
+                    """;
+    OrderProductResponse response = jdbcTemplate.queryForObject(sql2, (rs, rowNum) -> OrderProductResponse.builder()
+        .orderNumber(rs.getInt("order_number"))
+        .names(rs.getString("names"))
+        .quantity(rs.getInt("quantity"))
+        .allPrice(rs.getBigDecimal("total_price"))
+        .sale(rs.getInt("total_discount"))
+        .sumOfDiscount(rs.getBigDecimal("sum_of_discount"))
+        .totalPrice(rs.getBigDecimal("total"))
+        .build(), orderId);
+
+    orderInfoResponse.setProductResponseList(response);
     return orderInfoResponse;
   }
 
@@ -179,5 +190,210 @@ public class OrderTemplateImpl implements OrderTemplate {
         , userId
 
     );
+  }
+
+  @Override
+  public OrderInfoByUserResponse getOrderByUser(Long orderId, Long userId) {
+
+    String sql = """
+                SELECT
+                    o.id                                    as order_id,
+                    o.order_number                          as order_number,
+                    o.status                                as status,
+                    concat(u.first_name,' ',u.last_name)    as client,
+                    u.first_name                            as first_name,
+                    u.last_name                             as last_name,
+                    u.address                               as address,
+                    u.phone_number                          as phone_number,
+                    u.email                                 as email,
+                    o.date_of_order                         as date,
+                    o.type_payment                          as type_payment,
+                    o.total_discount                        as total_discount,
+                    o.total_price                           as total_price
+                FROM orders o
+                JOIN users u on o.user_id = u.id
+                JOIN orders_sub_products osp on o.id = osp.orders_id
+                JOIN sub_products sp on osp.sub_products_id = sp.id
+                JOIN products p on sp.product_id = p.id
+                JOIN brands b on p.brand_id = b.id
+                LEFT JOIN discounts d on sp.id = d.sub_product_id
+                WHERE o.id = ? AND u.id = ?
+                """;
+
+    OrderInfoByUserResponse info = new OrderInfoByUserResponse();
+    jdbcTemplate.query(sql, (rs, rowNum) -> {
+          info.setOrderId(rs.getLong("order_id"));
+          info.setOrderNumber(rs.getInt("order_number"));
+          info.setStatus(rs.getString("status"));
+          info.setClient(rs.getString("client"));
+          info.setFirstName(rs.getString("first_name"));
+          info.setLastName(rs.getString("last_name"));
+          info.setAddress(rs.getString("address"));
+          info.setPhoneNumber(rs.getString("phone_number"));
+          info.setEmail(rs.getString("email"));
+          info.setDate(rs.getDate("date").toLocalDate());
+          info.setTypePayment(rs.getString("type_payment"));
+          info.setTotalDiscount(rs.getInt("total_discount"));
+          info.setTotalPrice(rs.getInt("total_price"));
+          return info;
+        },
+        orderId,
+        userId
+    );
+
+    String sql2 = """
+                SELECT
+                    sp.id,
+                    concat(p.name, ' ', b.name, ' ', sp.rom, ' ', sp.code_color)    as product_name,
+                    sp.rating                                                       as rating,
+                    (SELECT COUNT(r) FROM sub_products sp
+                    JOIN reviews r ON sp.id = r.sub_product_id
+                    JOIN orders_sub_products osp on sp.id = osp.sub_products_id)    as count_of_reviews,
+                    sp.price                                                        as price,
+                    (SELECT spi.images
+                        FROM sub_product_images spi
+                        WHERE spi.sub_product_id = sp.id LIMIT 1)                   as image
+                FROM sub_products sp
+                JOIN products p on sp.product_id = p.id
+                JOIN reviews r on sp.id = r.sub_product_id
+                JOIN brands b on p.brand_id = b.id
+                JOIN orders_sub_products osp on sp.id = osp.sub_products_id
+                JOIN orders o on osp.orders_id = o.id
+                JOIN users u on o.user_id = u.id
+                WHERE o.id = ? AND u.id = ?
+                """;
+
+    List<OrderProductsInfoResponse> products = jdbcTemplate.query(
+        sql2, (rs, i) -> new OrderProductsInfoResponse(
+            rs.getLong("id"),
+            rs.getString("product_name"),
+            rs.getDouble("rating"),
+            rs.getInt("count_of_reviews"),
+            rs.getBigDecimal("price"),
+            rs.getString("image")
+        ),
+        orderId,
+        userId
+    );
+
+    info.setProductsInfoResponses(products);
+    return info;
+  }
+
+  private String getSortClause(String sort) {
+    return switch (sort) {
+      case "В ожидании" -> " o.status = 'PENDING' AND ";
+      case "В обработке" -> " o.status = 'IN_PROCESSING' AND ";
+      case "Курьер в пути" -> " o.status = 'COURIER_ON_THE_WAY' AND ";
+      case "Доставлены" -> " o.status = 'DELIVERED' AND ";
+      case "Отменены" -> " o.status = 'CANCEL' AND ";
+      default -> null;
+    };
+  }
+
+  @Override
+  public OrderSearchPagination orderSearch(String keyword, String sortType,
+      LocalDate startDate, LocalDate endDate, int pageSize, int pageNumber) {
+
+    String sort = "";
+
+    if (sortType != null) {
+      sort = getSortClause(sortType);
+    }
+
+    if (endDate == null) {
+      endDate = LocalDate.now();
+    }
+
+    String sql = """
+                SELECT DISTINCT
+                    o.id                                        AS order_id,
+                    CONCAT(u.first_name,' ',u.last_name)        AS full_name,
+                    o.order_number                              AS order_number,
+                    o.quantity                                  AS quantity,
+                    o.total_price                               AS total_price,
+                    o.type_delivery                             AS type_delivery,
+                    o.status                                    AS status
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                JOIN orders_sub_products osp ON o.id = osp.orders_id
+                JOIN sub_products sp ON sp.id = osp.sub_products_id
+                JOIN products p on p.id = sp.product_id
+                WHERE o.date_of_order BETWEEN ? AND ? AND (CAST(sp.article_number AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(p.name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(o.order_number AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(u.first_name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(u.last_name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(o.total_price AS TEXT) ILIKE (concat('%' || ? || '%')))
+                GROUP BY
+                    o.id,
+                    u.first_name,
+                    u.last_name,
+                    o.order_number,
+                    o.quantity,
+                    o.total_price,
+                    o.type_delivery,
+                    o.status
+                ORDER BY o.id
+                """;
+
+    if (sort != null) {
+      sql = sql.replace("o.date_of_order BETWEEN ? AND ?", sort + "o.date_of_order BETWEEN ? AND ? ");
+    }
+
+    int offset = (pageNumber - 1) * pageSize;
+    sql += " LIMIT ? OFFSET ?";
+
+    List<AdminOrderSearch> adminOrderSearches = jdbcTemplate.query(sql,
+        (rs, rowNum) ->
+            AdminOrderSearch.builder()
+                .orderId(rs.getLong("order_id"))
+                .userFullName(rs.getString("full_name"))
+                .orderNumber(rs.getInt("order_number"))
+                .quantity(rs.getInt("quantity"))
+                .totalPrice(rs.getBigDecimal("total_price"))
+                .typeDelivery(rs.getString("type_delivery"))
+                .status(rs.getString("status"))
+                .build(),
+        startDate, endDate,
+        keyword, keyword, keyword, keyword, keyword, keyword,
+        pageSize, offset
+    );
+
+    String countSQL = """
+          SELECT COUNT(*) FROM (
+              SELECT DISTINCT o.id
+              FROM orders o
+                JOIN users u ON o.user_id = u.id
+                JOIN orders_sub_products osp ON o.id = osp.orders_id
+                JOIN sub_products sp ON sp.id = osp.sub_products_id
+                JOIN products p on p.id = sp.product_id
+                WHERE o.date_of_order BETWEEN ? AND ? AND (CAST(sp.article_number AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(p.name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(o.order_number AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(u.first_name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(u.last_name AS TEXT) ILIKE (concat('%' || ? || '%'))
+                                                        OR CAST(o.total_price AS TEXT) ILIKE (concat('%' || ? || '%')))
+          ) AS filtered_products
+          """;
+
+    if (sort != null) {
+      countSQL = countSQL.replace("o.date_of_order BETWEEN ? AND ?", sort + "o.date_of_order BETWEEN ? AND ? ");
+    }
+
+    Integer count = jdbcTemplate.queryForObject(
+        countSQL,
+        new Object[]{startDate, endDate, keyword, keyword, keyword, keyword, keyword, keyword},
+        new int[]{Types.DATE, Types.DATE, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR,
+            Types.VARCHAR, Types.VARCHAR, Types.VARCHAR},
+        Integer.class
+    );
+
+    if (count == null) {
+      log.info("Product quantity not available");
+      throw new NullPointerException("Product quantity not available");
+    }
+    log.info("Successfully!");
+    return new OrderSearchPagination(adminOrderSearches, pageSize, pageNumber, count);
   }
 }
